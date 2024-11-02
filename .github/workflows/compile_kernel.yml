@@ -1,0 +1,95 @@
+name: Build and Release Linux Kernel
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang llvm lld build-essential bc kmod cpio flex bison libssl-dev p7zip-full #gcc-aarch64-linux-gnu
+
+    - name: Build kernel
+      run: |
+        make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j16 q_defconfig
+        make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc)
+        make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) modules_install INSTALL_MOD_PATH=$PWD/OUT/kernel_modules
+
+    - name: Package kernel
+      run: |
+        mkdir -p kernel-package
+        cp OUT/arch/arm64/boot/Image kernel-package/
+        7z a kernel.7z -t7z kernel-package/*
+
+    - name: Package device tree
+      run: |
+        mkdir -p dtb-package
+        cp OUT/arch/arm64/boot/dts/*/*.dtb dtb-package/
+        7z a dtbs.7z -t7z dtb-package/*
+
+    - name: Package modules
+      run: |
+        mkdir -p modules-package
+        cp -r OUT/kernel_modules/* modules-package/
+        7z a modules.7z -t7z modules-package/*
+
+    - name: Set Release Tag and Name
+      id: set_tag_name
+      run: |
+        current_time=$(date +"%y.%U.%H.%M")
+        echo "TAG_NAME=release-${current_time}" >> $GITHUB_ENV
+        echo "RELEASE_NAME=Release ${current_time}" >> $GITHUB_ENV
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.TAG_NAME }}
+        release_name: ${{ env.RELEASE_NAME }}
+        draft: false
+        prerelease: true
+
+    - name: Upload Kernel
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: kernel.7z
+        asset_name: kernel.7z
+        asset_content_type: application/x-7z-compressed
+
+    - name: Upload Device Tree
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dtbs.7z
+        asset_name: dtbs.7z
+        asset_content_type: application/x-7z-compressed
+
+    - name: Upload Modules
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: modules.7z
+        asset_name: modules.7z
+        asset_content_type: application/x-7z-compressed
