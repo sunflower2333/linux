@@ -1,29 +1,26 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Copyright (c) 2023 Kancy Joe
+// Copyright (c) 2024 Kancy joe
 // Generated with linux-mdss-dsi-panel-driver-generator from vendor device tree:
-//   Copyright (c) 2013, Kancy Joe. All rights reserved.
+//   Copyright (c) 2013, The Linux Foundation. All rights reserved.
 
 #include <linux/backlight.h>
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
+#include <linux/mod_devicetable.h>
 #include <linux/module.h>
-#include <linux/of.h>
-
-#include <video/mipi_display.h>
 
 #include <drm/display/drm_dsc.h>
 #include <drm/display/drm_dsc_helper.h>
 #include <drm/drm_mipi_dsi.h>
 #include <drm/drm_modes.h>
 #include <drm/drm_panel.h>
+#include <drm/drm_probe_helper.h>
 
 struct j2_mp_42_02_0b_dsc {
 	struct drm_panel panel;
 	struct mipi_dsi_device *dsi;
 	struct drm_dsc_config dsc;
 	struct gpio_desc *reset_gpio;
-    struct regulator_bulk_data supplies[1];
-	bool prepared;
 };
 
 static inline
@@ -44,136 +41,99 @@ static void j2_mp_42_02_0b_dsc_reset(struct j2_mp_42_02_0b_dsc *ctx)
 
 static int j2_mp_42_02_0b_dsc_on(struct j2_mp_42_02_0b_dsc *ctx)
 {
-	struct mipi_dsi_device *dsi = ctx->dsi;
-	struct device *dev = &dsi->dev;
-	int ret;
+	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
 
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x07);
-	mipi_dsi_dcs_write_seq(dsi, 0xc0, 0x10);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x03);
-	mipi_dsi_dcs_write_seq(dsi, 0xd4, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xb5, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xc0, 0x33);
-	mipi_dsi_dcs_write_seq(dsi, 0xb2, 0x58, 0x00, 0x08, 0x08);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xca, 0x30);
-	mipi_dsi_dcs_write_seq(dsi, 0xb5, 0x80);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xc6, 0x13);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xd2, 0x00, 0x12, 0x61, 0x25, 0x43, 0x07);
-	mipi_dsi_dcs_write_seq(dsi, 0xb7, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e);
-	mipi_dsi_dcs_write_seq(dsi, 0xb8, 0x48, 0x48, 0x48, 0x48);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xb3, 0x13);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xb4, 0x13);
-	mipi_dsi_dcs_write_seq(dsi, 0xcd, 0x05, 0x61);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x05);
-	mipi_dsi_dcs_write_seq(dsi, 0xb3, 0x88, 0x80);
-	mipi_dsi_dcs_write_seq(dsi, 0xb5, 0x04, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xb7, 0x04, 0x00, 0x00, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xb8, 0x04, 0x00, 0x00, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0xff, 0xaa, 0x55, 0xa5, 0x81);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x0d);
-	mipi_dsi_dcs_write_seq(dsi, 0xf3, 0xab);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x05);
-	mipi_dsi_dcs_write_seq(dsi, 0xfd, 0x00, 0xda);
-	mipi_dsi_dcs_write_seq(dsi, 0xff, 0xaa, 0x55, 0xa5, 0x80);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x0a);
-	mipi_dsi_dcs_write_seq(dsi, 0xfc, 0x02);
-	mipi_dsi_dcs_write_seq(dsi, 0x6f, 0x36);
-	mipi_dsi_dcs_write_seq(dsi, 0xf6, 0x42);
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x00, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0x3b, 0x00, 0x0c, 0x00, 0x04);
-	mipi_dsi_dcs_write_seq(dsi, 0x90, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, 0x93,
-			       0x89, 0x28, 0x00, 0x0c, 0x02, 0x00, 0x02, 0x0e,
-			       0x01, 0x1f, 0x00, 0x07, 0x08, 0xbb, 0x08, 0x7a,
-			       0x10, 0xf0);
-	mipi_dsi_dcs_write_seq(dsi, 0x03, 0x11);
-	mipi_dsi_dcs_write_seq(dsi, MIPI_DCS_WRITE_MEMORY_START);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
+				     0x55, 0xaa, 0x52, 0x08, 0x07);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xc0, 0x10);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
+				     0x55, 0xaa, 0x52, 0x08, 0x03);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xd4, 0x00);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
+				     0x55, 0xaa, 0x52, 0x08, 0x00);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb5, 0x00);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xc0, 0x33);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb2, 0x58, 0x00, 0x08, 0x08);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xca, 0x30);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb5, 0x80);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xc6, 0x13);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
+				     0x55, 0xaa, 0x52, 0x08, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xd2,
+				     0x00, 0x12, 0x61, 0x25, 0x43, 0x07);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb7,
+				     0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb8, 0x48, 0x48, 0x48, 0x48);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb3, 0x13);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb4, 0x13);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xcd, 0x05, 0x61);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
+				     0x55, 0xaa, 0x52, 0x08, 0x05);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb3, 0x88, 0x80);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb5, 0x04, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb7, 0x04, 0x00, 0x00, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb8, 0x04, 0x00, 0x00, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0xaa, 0x55, 0xa5, 0x81);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x0d);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf3, 0xab);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x05);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfd, 0x00, 0xda);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xff, 0xaa, 0x55, 0xa5, 0x80);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x0a);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xfc, 0x02);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x6f, 0x36);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf6, 0x42);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
+				     0x55, 0xaa, 0x52, 0x00, 0x00);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x3b, 0x00, 0x0c, 0x00, 0x04);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x90, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x93,
+				     0x89, 0x28, 0x00, 0x0c, 0x02, 0x00, 0x02,
+				     0x0e, 0x01, 0x1f, 0x00, 0x07, 0x08, 0xbb,
+				     0x08, 0x7a, 0x10, 0xf0);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x03, 0x11);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x2c);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x35, 0x00);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x53, 0x20);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x51, 0x00, 0x00, 0x00, 0x00);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x2a, 0x00, 0x00, 0x04, 0x37);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x2b, 0x00, 0x00, 0x09, 0x23);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
+				     0x55, 0xaa, 0x52, 0x08, 0x00);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb4,
+				     0xcb, 0xbb, 0xbb, 0xaa, 0x99, 0x77, 0x66,
+				     0x00, 0x00, 0x00, 0xb4, 0xd0, 0xd0, 0xd0,
+				     0xd0, 0xd0, 0x86, 0x86, 0x3c, 0x3c, 0xf2,
+				     0xf2, 0xa8, 0xa8, 0x36, 0x36, 0x36, 0x36,
+				     0x0a);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x2f, 0x01);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x26, 0x01);
+	mipi_dsi_dcs_exit_sleep_mode_multi(&dsi_ctx);
+	mipi_dsi_msleep(&dsi_ctx, 100);
+	mipi_dsi_dcs_set_display_on_multi(&dsi_ctx);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
+				     0x55, 0xaa, 0x52, 0x08, 0x00);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xb5, 0x84);
 
-	ret = mipi_dsi_dcs_set_tear_on(dsi, MIPI_DSI_DCS_TEAR_MODE_VBLANK);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set tear on: %d\n", ret);
-		return ret;
-	}
-
-	mipi_dsi_dcs_write_seq(dsi, MIPI_DCS_WRITE_CONTROL_DISPLAY, 0x20);
-	mipi_dsi_dcs_write_seq(dsi, 0x51, 0x00, 0x00, 0x00, 0x00);
-
-	ret = mipi_dsi_dcs_set_column_address(dsi, 0x0000, 0x0437);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set column address: %d\n", ret);
-		return ret;
-	}
-
-	ret = mipi_dsi_dcs_set_page_address(dsi, 0x0000, 0x0923);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set page address: %d\n", ret);
-		return ret;
-	}
-
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0xb4,
-			       0xcb, 0xbb, 0xbb, 0xaa, 0x99, 0x77, 0x66, 0x00,
-			       0x00, 0x00, 0xb4, 0xd0, 0xd0, 0xd0, 0xd0, 0xd0,
-			       0x86, 0x86, 0x3c, 0x3c, 0xf2, 0xf2, 0xa8, 0xa8,
-			       0x36, 0x36, 0x36, 0x36, 0x0a);
-	mipi_dsi_dcs_write_seq(dsi, 0x2f, 0x01);
-	mipi_dsi_dcs_write_seq(dsi, MIPI_DCS_SET_GAMMA_CURVE, 0x01);
-
-    /* Set pixel format */
-    ret = mipi_dsi_dcs_set_pixel_format(dsi, 0x77);
-    if (ret < 0) {
-        dev_err(dev, "Failed to set pixel format (%d)\n", ret);
-        return ret;
-    }
-
-	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
-	if (ret < 0) {
-		dev_err(dev, "Failed to exit sleep mode: %d\n", ret);
-		return ret;
-	}
-	msleep(100);
-
-	ret = mipi_dsi_dcs_set_display_on(dsi);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set display on: %d\n", ret);
-		return ret;
-	}
-
-	mipi_dsi_dcs_write_seq(dsi, 0xf0, 0x55, 0xaa, 0x52, 0x08, 0x00);
-	mipi_dsi_dcs_write_seq(dsi, 0xb5, 0x84);
-
-	return 0;
+	return dsi_ctx.accum_err;
 }
 
 static int j2_mp_42_02_0b_dsc_off(struct j2_mp_42_02_0b_dsc *ctx)
 {
-	struct mipi_dsi_device *dsi = ctx->dsi;
-	struct device *dev = &dsi->dev;
-	int ret;
+	struct mipi_dsi_multi_context dsi_ctx = { .dsi = ctx->dsi };
 
-	ret = mipi_dsi_dcs_set_display_off(dsi);
-	if (ret < 0) {
-		dev_err(dev, "Failed to set display off: %d\n", ret);
-		return ret;
-	}
+	mipi_dsi_dcs_set_display_off_multi(&dsi_ctx);
+	mipi_dsi_dcs_enter_sleep_mode_multi(&dsi_ctx);
+	mipi_dsi_msleep(&dsi_ctx, 120);
 
-	ret = mipi_dsi_dcs_enter_sleep_mode(dsi);
-	if (ret < 0) {
-		dev_err(dev, "Failed to enter sleep mode: %d\n", ret);
-		return ret;
-	}
-	msleep(120);
-
-	return 0;
+	return dsi_ctx.accum_err;
 }
 
 static int j2_mp_42_02_0b_dsc_prepare(struct drm_panel *panel)
@@ -182,15 +142,6 @@ static int j2_mp_42_02_0b_dsc_prepare(struct drm_panel *panel)
 	struct device *dev = &ctx->dsi->dev;
 	struct drm_dsc_picture_parameter_set pps;
 	int ret;
-
-	if (ctx->prepared)
-		return 0;
-
-    ret = regulator_bulk_enable(ARRAY_SIZE(ctx->supplies), ctx->supplies);
-    if (ret < 0) {
-        dev_err(dev, "Failed to enable regulators: %d\n", ret);
-        return ret;
-    }
 
 	j2_mp_42_02_0b_dsc_reset(ctx);
 
@@ -217,7 +168,6 @@ static int j2_mp_42_02_0b_dsc_prepare(struct drm_panel *panel)
 
 	msleep(28); /* TODO: Is this panel-dependent? */
 
-	ctx->prepared = true;
 	return 0;
 }
 
@@ -227,21 +177,17 @@ static int j2_mp_42_02_0b_dsc_unprepare(struct drm_panel *panel)
 	struct device *dev = &ctx->dsi->dev;
 	int ret;
 
-	if (!ctx->prepared)
-		return 0;
-
 	ret = j2_mp_42_02_0b_dsc_off(ctx);
 	if (ret < 0)
 		dev_err(dev, "Failed to un-initialize panel: %d\n", ret);
 
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
 
-	ctx->prepared = false;
 	return 0;
 }
 
 static const struct drm_display_mode j2_mp_42_02_0b_dsc_mode = {
-	.clock = ((1080 + 16 + 8 + 8) * (2340 + 600 + 32 + 560) * 60 / 1000)*2,
+	.clock = (1080 + 16 + 8 + 8) * (2340 + 600 + 32 + 560) * 60 / 1000,
 	.hdisplay = 1080,
 	.hsync_start = 1080 + 16,
 	.hsync_end = 1080 + 16 + 8,
@@ -252,25 +198,13 @@ static const struct drm_display_mode j2_mp_42_02_0b_dsc_mode = {
 	.vtotal = 2340 + 600 + 32 + 560,
 	.width_mm = 710,
 	.height_mm = 1537,
+	.type = DRM_MODE_TYPE_DRIVER,
 };
 
 static int j2_mp_42_02_0b_dsc_get_modes(struct drm_panel *panel,
 					struct drm_connector *connector)
 {
-	struct drm_display_mode *mode;
-
-	mode = drm_mode_duplicate(connector->dev, &j2_mp_42_02_0b_dsc_mode);
-	if (!mode)
-		return -ENOMEM;
-
-	drm_mode_set_name(mode);
-
-	mode->type = DRM_MODE_TYPE_DRIVER | DRM_MODE_TYPE_PREFERRED;
-	connector->display_info.width_mm = mode->width_mm;
-	connector->display_info.height_mm = mode->height_mm;
-	drm_mode_probed_add(connector, mode);
-
-	return 1;
+	return drm_connector_helper_get_modes_fixed(connector, &j2_mp_42_02_0b_dsc_mode);
 }
 
 static const struct drm_panel_funcs j2_mp_42_02_0b_dsc_panel_funcs = {
@@ -296,6 +230,8 @@ static int j2_mp_42_02_0b_dsc_bl_update_status(struct backlight_device *bl)
 	return 0;
 }
 
+// TODO: Check if /sys/class/backlight/.../actual_brightness actually returns
+// correct values. If not, remove this function.
 static int j2_mp_42_02_0b_dsc_bl_get_brightness(struct backlight_device *bl)
 {
 	struct mipi_dsi_device *dsi = bl_get_data(bl);
@@ -342,13 +278,6 @@ static int j2_mp_42_02_0b_dsc_probe(struct mipi_dsi_device *dsi)
 	if (!ctx)
 		return -ENOMEM;
 
-	ctx->supplies[0].supply = "vddio";
-    ret = devm_regulator_bulk_get(&dsi->dev, ARRAY_SIZE(ctx->supplies),
-            ctx->supplies);
-
-//    if (ret < 0)
-//        return dev_err_probe(dev, PTR_ERR(ctx->supplies), "Failed to get vddio.\n");
-
 	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
@@ -394,9 +323,8 @@ static int j2_mp_42_02_0b_dsc_probe(struct mipi_dsi_device *dsi)
 
 	ret = mipi_dsi_attach(dsi);
 	if (ret < 0) {
-		dev_err(dev, "Failed to attach to DSI host: %d\n", ret);
 		drm_panel_remove(&ctx->panel);
-		return ret;
+		return dev_err_probe(dev, ret, "Failed to attach to DSI host\n");
 	}
 
 	return 0;
@@ -430,6 +358,6 @@ static struct mipi_dsi_driver j2_mp_42_02_0b_dsc_driver = {
 };
 module_mipi_dsi_driver(j2_mp_42_02_0b_dsc_driver);
 
-MODULE_AUTHOR("KancyJoe <sunflower2333@outlook.com>");
+MODULE_AUTHOR("Linux mdss panel generator");
 MODULE_DESCRIPTION("DRM driver for xiaomi 42 02 0b cmd mode dsc dsi panel");
 MODULE_LICENSE("GPL");
