@@ -21,6 +21,7 @@ struct j2_mp_42_02_0b_dsc {
 	struct mipi_dsi_device *dsi;
 	struct drm_dsc_config dsc;
 	struct gpio_desc *reset_gpio;
+	struct gpio_desc *disprate_gpio;
 };
 
 static inline
@@ -99,7 +100,7 @@ static int j2_mp_42_02_0b_dsc_on(struct j2_mp_42_02_0b_dsc *ctx)
 				     0x0e, 0x01, 0x1f, 0x00, 0x07, 0x08, 0xbb,
 				     0x08, 0x7a, 0x10, 0xf0);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x03, 0x11);
-	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x2c);
+	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x2c, 0x00);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x35, 0x00);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x53, 0x20);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x51, 0x00, 0x00, 0x00, 0x00);
@@ -116,7 +117,7 @@ static int j2_mp_42_02_0b_dsc_on(struct j2_mp_42_02_0b_dsc *ctx)
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x2f, 0x01);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0x26, 0x01);
 	mipi_dsi_dcs_exit_sleep_mode_multi(&dsi_ctx);
-	mipi_dsi_msleep(&dsi_ctx, 100);
+	mipi_dsi_msleep(&dsi_ctx, 180);
 	mipi_dsi_dcs_set_display_on_multi(&dsi_ctx);
 	mipi_dsi_dcs_write_seq_multi(&dsi_ctx, 0xf0,
 				     0x55, 0xaa, 0x52, 0x08, 0x00);
@@ -160,13 +161,14 @@ static int j2_mp_42_02_0b_dsc_prepare(struct drm_panel *panel)
 		return ret;
 	}
 
-	ret = mipi_dsi_compression_mode(ctx->dsi, true);
-	if (ret < 0) {
-		dev_err(dev, "failed to enable compression mode: %d\n", ret);
-		return ret;
-	}
+//	ret = mipi_dsi_compression_mode(ctx->dsi, true);
+//	if (ret < 0) {
+//		dev_err(dev, "failed to enable compression mode: %d\n", ret);
+//		return ret;
+//	}
 
-	msleep(28); /* TODO: Is this panel-dependent? */
+	msleep(128); /* TODO: Is this panel-dependent? */
+	gpiod_set_value_cansleep(ctx->disprate_gpio, 1);
 
 	return 0;
 }
@@ -282,6 +284,11 @@ static int j2_mp_42_02_0b_dsc_probe(struct mipi_dsi_device *dsi)
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
 				     "Failed to get reset-gpios\n");
+
+	ctx->disprate_gpio = devm_gpiod_get(dev, "disprate", GPIOD_OUT_HIGH);
+	if (IS_ERR(ctx->disprate_gpio))
+		return dev_err_probe(dev, PTR_ERR(ctx->disprate_gpio),
+				     "Failed to get disprate-gpios\n");
 
 	ctx->dsi = dsi;
 	mipi_dsi_set_drvdata(dsi, ctx);
