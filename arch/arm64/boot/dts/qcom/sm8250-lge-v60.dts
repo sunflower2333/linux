@@ -8,6 +8,7 @@
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
 #include <dt-bindings/sound/qcom,q6afe.h>
 #include <dt-bindings/sound/qcom,q6asm.h>
+#include <dt-bindings/usb/pd.h>
 #include <dt-bindings/gpio/gpio.h>
 #include "sm8250.dtsi"
 #include "pm8150.dtsi"
@@ -35,7 +36,7 @@
 		ranges;
 		// stdout-path = "serial0:115200n8";
 		stdout-path = "display0";
-		bootargs = "panic=30 loglevel=7 pd_ignore_unused clk_ignore_unused console=ttyS0,115200 console=tty1 root=/dev/sda27 rw";
+		bootargs = "panic=30 loglevel=7 pd_ignore_unused clk_ignore_unused console=ttyS0,115200 console=tty1 root=/dev/sda27 rw rootfs_part=sda27";
 
 		framebuffer: framebuffer@9c000000 {
 			compatible = "simple-framebuffer";
@@ -72,6 +73,67 @@
 			reg = <0x0 0x9c000000 0x0 0x1200000>;
 			label = "cont_splash_region";
 			no-map;
+		};
+	};
+
+	qca6390-pmu {
+		compatible = "qcom,qca6390-pmu";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&bt_en_state>, <&wlan_en_state>;
+
+		vddaon-supply = <&vreg_s6a_0p95>;
+		vddpmu-supply = <&vreg_s6a_0p95>;
+		vddrfa0p95-supply = <&vreg_s6a_0p95>;
+		vddrfa1p3-supply = <&vreg_s8c_1p3>;
+		vddrfa1p9-supply = <&vreg_s5a_1p9>;
+		vddpcie1p3-supply = <&vreg_s8c_1p3>;
+		vddpcie1p9-supply = <&vreg_s5a_1p9>;
+		vddio-supply = <&vreg_s4a_1p8>;
+
+		wlan-enable-gpios = <&tlmm 20 GPIO_ACTIVE_HIGH>;
+		bt-enable-gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
+
+		regulators {
+			vreg_pmu_rfa_cmn: ldo0 {
+				regulator-name = "vreg_pmu_rfa_cmn";
+			};
+
+			vreg_pmu_aon_0p59: ldo1 {
+				regulator-name = "vreg_pmu_aon_0p59";
+			};
+
+			vreg_pmu_wlcx_0p8: ldo2 {
+				regulator-name = "vreg_pmu_wlcx_0p8";
+			};
+
+			vreg_pmu_wlmx_0p85: ldo3 {
+				regulator-name = "vreg_pmu_wlmx_0p85";
+			};
+
+			vreg_pmu_btcmx_0p85: ldo4 {
+				regulator-name = "vreg_pmu_btcmx_0p85";
+			};
+
+			vreg_pmu_rfa_0p8: ldo5 {
+				regulator-name = "vreg_pmu_rfa_0p8";
+			};
+
+			vreg_pmu_rfa_1p2: ldo6 {
+				regulator-name = "vreg_pmu_rfa_1p2";
+			};
+
+			vreg_pmu_rfa_1p7: ldo7 {
+				regulator-name = "vreg_pmu_rfa_1p7";
+			};
+
+			vreg_pmu_pcie_0p9: ldo8 {
+				regulator-name = "vreg_pmu_pcie_0p9";
+			};
+
+			vreg_pmu_pcie_1p8: ldo9 {
+				regulator-name = "vreg_pmu_pcie_1p8";
+			};
 		};
 	};
 
@@ -473,11 +535,11 @@
 };
 
 &gmu {
-	status = "disabled";
+	status = "okay";
 };
 
 &gpu {
-	status = "disabled";
+	status = "okay";
 
 	zap-shader {
 		memory-region = <&gpu_mem>;
@@ -495,6 +557,23 @@
 	vdda-pll-supply = <&vreg_l9a_1p2>;
 };
 
+&pcieport0 {
+	wifi@0 {
+		compatible = "pci17cb,1101";
+		reg = <0x10000 0x0 0x0 0x0 0x0>;
+
+		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
+		vddaon-supply = <&vreg_pmu_aon_0p59>;
+		vddwlcx-supply = <&vreg_pmu_wlcx_0p8>;
+		vddwlmx-supply = <&vreg_pmu_wlmx_0p85>;
+		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
+		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
+		vddrfa1p7-supply = <&vreg_pmu_rfa_1p7>;
+		vddpcie0p9-supply = <&vreg_pmu_pcie_0p9>;
+		vddpcie1p8-supply = <&vreg_pmu_pcie_1p8>;
+	};
+};
+
 &pcie2 {
 	status = "okay";
 };
@@ -506,7 +585,7 @@
 };
 
 &i2c1 {
-	status = "okay";
+	status = "disabled";
 	clock-frequency = <1000000>;
 	
 	pn547@28 {
@@ -521,7 +600,7 @@
 };
 
 &i2c13 {
-	status = "okay";
+	status = "disabled";
 	sw42902@28 {
 		compatible = "lge,sw42902";
 		reg = <0x28>;
@@ -580,20 +659,56 @@
 	};
 };
 
-&i2c15 {
+&mdss {
 	status = "okay";
-	tfa9878_l: tfa9878@34 {
-		compatible = "nxp,tfa9879";
-		reg = <0x34>;
+};
+
+&mdss_dp {
+	status = "okay";
+};
+
+&mdss_dp_out {
+	data-lanes = <0 1>;
+	remote-endpoint = <&usb_1_qmpphy_dp_in>;
+};
+
+&mdss_dsi0_out {
+	remote-endpoint = <&panel_in_0>;
+	data-lanes = <0 1 2 3>;
+};
+
+&mdss_dsi0_phy {
+	vdds-supply = <&vreg_l5a_0p875>;
+	status = "okay";
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&vreg_l9a_1p2>;
+	status = "okay";
+
+	display_panel: panel@0 {
+		reg = <0>;
+		compatible = "lge,sw43103-a3-dsc";
+		vddio-supply = <&vreg_l14a_1p8>;
+		reset-gpios = <&tlmm 75 GPIO_ACTIVE_LOW>;
+
 		pinctrl-names = "default";
-		pinctrl-0 = <&tfa9878_reset_active>;
-		#sound-dai-cells = <0>;
-	};
-	
-	tfa9878_r: tfa9878@35 {
-		compatible = "nxp,tfa9879";
-		reg = <0x35>;
-		#sound-dai-cells = <0>;
+		pinctrl-0 = <&panel_default>, <&te_default>;
+
+		status = "okay";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				panel_in_0: endpoint {
+					remote-endpoint = <&mdss_dsi0_out>;
+				};
+			};
+		};
 	};
 };
 
@@ -713,6 +828,18 @@
 	};
 };
 
+&gpi_dma0 {
+	status = "okay";
+};
+
+&gpi_dma1 {
+	status = "okay";
+};
+
+&gpi_dma2 {
+	status = "okay";
+};
+
 &qupv3_id_0 {
 	status = "okay";
 };
@@ -827,6 +954,28 @@
 	};
 };
 
+&q6afedai {
+	dai@20 {
+		reg = <SECONDARY_MI2S_RX>;
+		qcom,sd-lines = <0>;
+	};
+};
+
+&q6asmdai {
+	dai@0 {
+		reg = <0>;
+	};
+
+	dai@1 {
+		reg = <1>;
+	};
+
+	dai@2 {
+		reg = <2>;
+	};
+};
+
+
 &swr1 {
 	status = "okay";
 
@@ -937,6 +1086,72 @@
 		drive-strength = <2>;
 		output-high;
 	};
+
+	sdc2_card_det_n: sd-card-det-n-state {
+		pins = "gpio77";
+		function = "gpio";
+		bias-pull-up;
+		drive-strength = <2>;
+	};
+
+	sdc2_default_state: sdc2-default-state {
+		clk-pins {
+			pins = "sdc2_clk";
+			drive-strength = <16>;
+			bias-disable;
+		};
+
+		cmd-pins {
+			pins = "sdc2_cmd";
+			drive-strength = <10>;
+			bias-pull-up;
+		};
+
+		data-pins {
+			pins = "sdc2_data";
+			drive-strength = <10>;
+			bias-pull-up;
+		};
+	};
+	
+	bt_en_state: bt-default-state {
+		pins = "gpio21";
+		function = "gpio";
+		drive-strength = <16>;
+		output-low;
+		bias-pull-up;
+	};
+
+	wlan_en_state: wlan-default-state {
+		pins = "gpio20";
+		function = "gpio";
+		drive-strength = <16>;
+		output-low;
+		bias-pull-up;
+	};
+
+	panel_default: panel-active-state {
+		pins = "gpio75";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	te_default: te-state {
+		pins = "gpio66";
+		function = "mdp_vsync";
+		drive-strength = <2>;
+		bias-pull-down;
+	};
+};
+
+&pon_pwrkey {
+	status = "okay";
+};
+
+&pon_resin {
+	status = "okay";
+	linux,code = <KEY_VOLUMEDOWN>;
 };
 
 &txmacro {
@@ -951,11 +1166,11 @@
 	status = "okay";
 
 	vcc-supply = <&vreg_l17a_3p0>;
-	vcc-max-microamp = <750000>;
+	vcc-max-microamp = <800000>;
 	vccq-supply = <&vreg_l6a_1p2>;
-	vccq-max-microamp = <700000>;
+	vccq-max-microamp = <800000>;
 	vccq2-supply = <&vreg_s4a_1p8>;
-	vccq2-max-microamp = <750000>;
+	vccq2-max-microamp = <800000>;
 };
 
 &ufs_mem_phy {
@@ -970,7 +1185,12 @@
 };
 
 &usb_1_dwc3 {
-	dr_mode = "host";
+	dr_mode = "otg";
+	usb-role-switch;
+};
+
+&usb_1_dwc3_hs_out {
+	remote-endpoint = <&pm8150b_hs_in>;
 };
 
 &usb_1_hsphy {
@@ -986,6 +1206,14 @@
 
 	vdda-phy-supply = <&vreg_l9a_1p2>;
 	vdda-pll-supply = <&vreg_l18a_0p9>;
+};
+
+&usb_1_qmpphy_out {
+	remote-endpoint = <&pm8150b_typec_mux_in>;
+};
+
+&usb_1_qmpphy_dp_in {
+	remote-endpoint = <&mdss_dp_out>;
 };
 
 &usb_2 {
@@ -1013,6 +1241,20 @@
 
 &venus {
 	status = "okay";
+	firmware-name = "qcom/sm8250/lge/timelm/venus.mbn";
+};
+
+&sdhc_2 {
+	status = "okay";
+	cd-gpios = <&tlmm 77 GPIO_ACTIVE_LOW>;
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sdc2_default_state &sdc2_card_det_n>;
+	pinctrl-1 = <&sdc2_sleep_state &sdc2_card_det_n>;
+	vmmc-supply = <&vreg_l9c_2p9>;
+	vqmmc-supply = <&vreg_l6c_2p9>;
+	bus-width = <4>;
+	no-sdio;
+	no-mmc;
 };
 
 &adsp_mem {
@@ -1025,4 +1267,75 @@
 
 &cdsp_secure_heap {
 	reg = <0x0 0x8c700000 0x0 0x4600000>;
+};
+
+&pm8150b_vbus {
+	regulator-min-microamp = <500000>;
+	regulator-max-microamp = <3000000>;
+	status = "okay";
+};
+
+&i2c15 {
+	status = "okay";
+
+	tfa9878_l: tfa9878@34 {
+		compatible = "nxp,tfa9879";
+		reg = <0x34>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&tfa9878_reset_active>;
+		#sound-dai-cells = <0>;
+	};
+	
+	tfa9878_r: tfa9878@35 {
+		compatible = "nxp,tfa9879";
+		reg = <0x35>;
+		#sound-dai-cells = <0>;
+	};
+};
+
+&pm8150b_typec {
+	status = "okay";
+
+	vdd-pdphy-supply = <&vreg_l2a_3p1>;
+
+	connector {
+		compatible = "usb-c-connector";
+		label = "USB-C";
+
+		power-role = "source";
+		data-role = "dual";
+		self-powered;
+		accessory-mode-audio = <1>;
+
+		source-pdos = <PDO_FIXED(5000, 3000,
+					 PDO_FIXED_DUAL_ROLE |
+					 PDO_FIXED_USB_COMM |
+					 PDO_FIXED_DATA_SWAP)>;
+
+		altmodes {
+			displayport {
+				svid = /bits/ 16 <0xff01>;
+				vdo = <0x00001c46>;
+			};
+		};
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				pm8150b_hs_in: endpoint {
+					remote-endpoint = <&usb_1_dwc3_hs_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				pm8150b_typec_mux_in: endpoint {
+					remote-endpoint = <&usb_1_qmpphy_out>;
+				};
+			};
+		};
+	};
 };
