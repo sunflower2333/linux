@@ -33,6 +33,16 @@
 		serial0 = &uart12;
 		serial1 = &uart6;
 	};
+	
+	memory {
+        ddr_device_type = <0x08>;
+        device_type = "memory";
+		#address-cells = <2>;
+		#size-cells = <2>;
+        reg = <0x0 0x80000000 0x0 0x3b800000>,
+		<0x1 0x80000000 0x1 0x0>,
+		<0x0 0xc0000000 0x0 0xc0000000>;
+    };
 
 	wcd938x: audio-codec {
 		compatible = "qcom,wcd9380-codec";
@@ -951,7 +961,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&panel_default>, <&te_default>;
 
-		status = "okay";
+		status = "disabled";
 
 		ports {
 			#address-cells = <1>;

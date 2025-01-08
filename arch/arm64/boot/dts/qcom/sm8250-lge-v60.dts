@@ -29,7 +29,7 @@
 		serial0 = &uart12;
         display0 = &framebuffer;
 	};
-	
+
 	chosen {
 		#address-cells = <2>;
 		#size-cells = <2>;
