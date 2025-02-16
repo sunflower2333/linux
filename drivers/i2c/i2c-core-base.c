@@ -583,6 +583,9 @@ static int i2c_device_probe(struct device *dev)
 		goto err_detach_pm_domain;
 	}
 
+	client->debugfs = debugfs_create_dir(dev_name(&client->dev),
+					     client->adapter->debugfs);
+
 	if (driver->probe)
 		status = driver->probe(client);
 	else
@@ -602,6 +605,7 @@ static int i2c_device_probe(struct device *dev)
 	return 0;
 
 err_release_driver_resources:
+	debugfs_remove_recursive(client->debugfs);
 	devres_release_group(&client->dev, client->devres_group_id);
 err_detach_pm_domain:
 	dev_pm_domain_detach(&client->dev, do_power_on);
@@ -626,6 +630,8 @@ static void i2c_device_remove(struct device *dev)
 
 		driver->remove(client);
 	}
+
+	debugfs_remove_recursive(client->debugfs);
 
 	devres_release_group(&client->dev, client->devres_group_id);
 
@@ -1058,6 +1064,7 @@ void i2c_unregister_device(struct i2c_client *client)
 
 	if (ACPI_COMPANION(&client->dev))
 		acpi_device_clear_enumerated(ACPI_COMPANION(&client->dev));
+
 	device_remove_software_node(&client->dev);
 	device_unregister(&client->dev);
 }
@@ -1562,6 +1569,7 @@ static int i2c_register_adapter(struct i2c_adapter *adap)
 	res = device_add(&adap->dev);
 	if (res) {
 		pr_err("adapter '%s': can't register device (%d)\n", adap->name, res);
+		put_device(&adap->dev);
 		goto out_list;
 	}
 
@@ -2498,7 +2506,7 @@ static int i2c_detect_address(struct i2c_client *temp_client,
 static int i2c_detect(struct i2c_adapter *adapter, struct i2c_driver *driver)
 {
 	const unsigned short *address_list;
-	struct i2c_client *temp_client;
+	struct i2c_client temp_client;
 	int i, err = 0;
 
 	address_list = driver->address_list;
@@ -2519,22 +2527,19 @@ static int i2c_detect(struct i2c_adapter *adapter, struct i2c_driver *driver)
 		return 0;
 
 	/* Set up a temporary client to help detect callback */
-	temp_client = kzalloc(sizeof(struct i2c_client), GFP_KERNEL);
-	if (!temp_client)
-		return -ENOMEM;
-	temp_client->adapter = adapter;
+	memset(&temp_client, 0, sizeof(temp_client));
+	temp_client.adapter = adapter;
 
 	for (i = 0; address_list[i] != I2C_CLIENT_END; i += 1) {
 		dev_dbg(&adapter->dev,
 			"found normal entry for adapter %d, addr 0x%02x\n",
 			i2c_adapter_id(adapter), address_list[i]);
-		temp_client->addr = address_list[i];
-		err = i2c_detect_address(temp_client, driver);
+		temp_client.addr = address_list[i];
+		err = i2c_detect_address(&temp_client, driver);
 		if (unlikely(err))
 			break;
 	}
 
-	kfree(temp_client);
 	return err;
 }
 
