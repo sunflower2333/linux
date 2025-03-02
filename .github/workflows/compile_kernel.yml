@@ -22,11 +22,19 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y clang llvm lld build-essential bc kmod cpio flex bison libssl-dev p7zip-full #gcc-aarch64-linux-gnu
 
+    - name: Cache output directory
+      uses: actions/cache@v3
+      with:
+        path: OUT
+        key: ${{ runner.os }}-out-${{ hashFiles('**/Makefile') }}
+        restore-keys: |
+          ${{ runner.os }}-out-
+
     - name: Build kernel
       run: |
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j16 q_defconfig
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc)
-        make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) modules_install INSTALL_MOD_PATH=$PWD/OUT/kernel_modules
+        make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) modules_install INSTALL_MOD_PATH=$PWD/kernel_modules
 
     - name: Package kernel
       run: |
@@ -43,7 +51,7 @@ jobs:
     - name: Package modules
       run: |
         mkdir -p modules-package
-        tar zcvf modules.tgz OUT/kernel_modules/
+        tar zcvf modules.tgz kernel_modules/
 
     - name: Set Release Tag and Name
       id: set_tag_name
