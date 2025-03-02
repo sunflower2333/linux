@@ -36,6 +36,13 @@ jobs:
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc)
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) modules_install INSTALL_MOD_PATH=$PWD/kernel_modules
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) headers_install INSTALL_HDR_PATH=$PWD/linux_headers
+        cp .config $PWD/linux_headers/
+        cp Module.symvers $PWD/linux_headers/
+        mkdir -p $PWD/linux_headers/arch
+        cp -r arch/arm64 $PWD/linux_headers/arch/
+        cp -r include $PWD/linux_headers/
+        cp -r scripts $PWD/linux_headers/
+        cp Kconfig Makefile $PWD/linux_headers/
 
     - name: Package kernel
       run: |
