@@ -58,7 +58,7 @@ jobs:
 
     - name: Package modules
       run: |
-        7z a modules.7z -t7z kernel_modules/*
+        tar zcvf modules.tar.gz kernel_modules/*
 
     - name: Package headers
       run: |
@@ -108,8 +108,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: modules.7z
-        asset_name: modules.7z
+        asset_path: modules.tar.gz
+        asset_name: modules.tar.gz
         asset_content_type: application/x-7z-compressed
 
     - name: Upload Headers
