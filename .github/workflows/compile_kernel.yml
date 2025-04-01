@@ -36,13 +36,8 @@ jobs:
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc)
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) modules_install INSTALL_MOD_PATH=$PWD/kernel_modules
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) headers_install INSTALL_HDR_PATH=$PWD/linux_headers
-        cp .config $PWD/linux_headers/
-        cp Module.symvers $PWD/linux_headers/
-        mkdir -p $PWD/linux_headers/arch
-        cp -r arch/arm64 $PWD/linux_headers/arch/
-        cp -r include $PWD/linux_headers/
-        cp -r scripts $PWD/linux_headers/
-        cp Kconfig Makefile $PWD/linux_headers/
+        # Pack debs
+        make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=$KOUT -j$(nproc) q_defconfig bindeb-pkg
 
     - name: Package kernel
       run: |
@@ -60,9 +55,9 @@ jobs:
       run: |
         tar zcvf modules.tar.gz kernel_modules/*
 
-    - name: Package headers
+    - name: Package debs
       run: |
-        7z a headers.7z -t7z linux_headers/*
+        tar zcf linux_debs.tar.gz linux*deb
 
     - name: Set Release Tag and Name
       id: set_tag_name
