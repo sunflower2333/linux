@@ -22,14 +22,6 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y clang llvm lld build-essential bc kmod cpio flex bison libssl-dev p7zip-full #gcc-aarch64-linux-gnu
 
-    - name: Cache output directory
-      uses: actions/cache@v3
-      with:
-        path: OUT
-        key: ${{ runner.os }}-out-${{ hashFiles('**/Makefile') }}
-        restore-keys: |
-          ${{ runner.os }}-out-
-
     - name: Build kernel
       run: |
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j16 q_defconfig
@@ -37,7 +29,7 @@ jobs:
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) modules_install INSTALL_MOD_PATH=$PWD/kernel_modules
         make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) headers_install INSTALL_HDR_PATH=$PWD/linux_headers
         # Pack debs
-        make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- O=$KOUT -j$(nproc) q_defconfig bindeb-pkg
+        make ARCH=arm64 LLVM=1 LLVM_IAS=1 O=$PWD/OUT -j$(nproc) q_defconfig bindeb-pkg
 
     - name: Package kernel
       run: |
