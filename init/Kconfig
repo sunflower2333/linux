@@ -477,16 +477,6 @@ config CROSS_MEMORY_ATTACH
 	  to directly read from or write to another process' address space.
 	  See the man page for more details.
 
-config USELIB
-	bool "uselib syscall (for libc5 and earlier)"
-	default ALPHA || M68K || SPARC
-	help
-	  This option enables the uselib syscall, a system call used in the
-	  dynamic linker from libc5 and earlier.  glibc does not use this
-	  system call.  If you intend to run programs built on libc5 or
-	  earlier, you may need to enable this syscall.  Current systems
-	  running glibc can safely disable this.
-
 config AUDIT
 	bool "Auditing support"
 	depends on NET
@@ -1084,6 +1074,17 @@ config RT_GROUP_SCHED
 	  schedule realtime tasks for non-root users until you allocate
 	  realtime bandwidth for them.
 	  See Documentation/scheduler/sched-rt-group.rst for more information.
+
+config RT_GROUP_SCHED_DEFAULT_DISABLED
+	bool "Require boot parameter to enable group scheduling for SCHED_RR/FIFO"
+	depends on RT_GROUP_SCHED
+	default n
+	help
+	  When set, the RT group scheduling is disabled by default. The option
+	  is in inverted form so that mere RT_GROUP_SCHED enables the group
+	  scheduling.
+
+	  Say N if unsure.
 
 config EXT_GROUP_SCHED
 	bool
@@ -1695,6 +1696,16 @@ config FUTEX
 config FUTEX_PI
 	bool
 	depends on FUTEX && RT_MUTEXES
+	default y
+
+config FUTEX_PRIVATE_HASH
+	bool
+	depends on FUTEX && !BASE_SMALL && MMU
+	default y
+
+config FUTEX_MPOL
+	bool
+	depends on FUTEX && NUMA
 	default y
 
 config EPOLL
