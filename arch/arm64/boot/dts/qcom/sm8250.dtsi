@@ -987,7 +987,7 @@
 		};
 
 		gpi_dma2: dma-controller@800000 {
-			compatible = "qcom,sm8250-gpi-dma", "qcom,sdm845-gpi-dma";
+			compatible = "qcom,sm8250-gpi-dma-1", "qcom,sdm845-gpi-dma";
 			reg = <0 0x00800000 0 0x70000>;
 			interrupts = <GIC_SPI 588 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 589 IRQ_TYPE_LEVEL_HIGH>,
@@ -1324,7 +1324,7 @@
 		};
 
 		gpi_dma0: dma-controller@900000 {
-			compatible = "qcom,sm8250-gpi-dma", "qcom,sdm845-gpi-dma";
+			compatible = "qcom,sm8250-gpi-dma-0", "qcom,sdm845-gpi-dma";
 			reg = <0 0x00900000 0 0x70000>;
 			interrupts = <GIC_SPI 244 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>,
@@ -1754,7 +1754,7 @@
 		};
 
 		gpi_dma1: dma-controller@a00000 {
-			compatible = "qcom,sm8250-gpi-dma", "qcom,sdm845-gpi-dma";
+			compatible = "qcom,sm8250-gpi-dma-1", "qcom,sdm845-gpi-dma";
 			reg = <0 0x00a00000 0 0x70000>;
 			interrupts = <GIC_SPI 279 IRQ_TYPE_LEVEL_HIGH>,
 				     <GIC_SPI 280 IRQ_TYPE_LEVEL_HIGH>,
