@@ -67,13 +67,21 @@
 		#sound-dai-cells = <1>;
 	};
 
+	// battery: battery {
+	// 	compatible = "simple-battery";
+	// 	voltage-min-design-microvolt = <3400000>;
+	// 	voltage-max-design-microvolt = <4400000>;
+	// 	charge-full-design-microamp-hours = <4680000>;
+	// 	energy-full-design-microwatt-hours = <18400000>;
+	// };
+
 	chosen {
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
 		// stdout-path = "serial0:115200n8";
-		stdout-path = "display0";
-		bootargs = "pd_ignore_unused clk_ignore_unused panic=30 loglevel=7 console=ttyS0,115200 console=tty1 rootfs_part=sda36 root=/dev/sda36 rw systemd.journald.forward_to_console=true systemd.log_level=debug systemd.log_target=kmsg log_buf_len=10M printk.devkmsg=on";
+		// stdout-path = "display0";
+		bootargs = "panic=30 loglevel=7 console=ttyS0,115200 console=tty1 rootfs_part=sda36 root=/dev/sda36 rw rootwait systemd.journald.forward_to_console=true systemd.log_level=debug systemd.log_target=kmsg log_buf_len=10M printk.devkmsg=on";
 		//  pd_ignore_unused clk_ignore_unused 
 		display0: framebuffer@9c000000 {
 			compatible = "simple-framebuffer";
@@ -82,6 +90,7 @@
 			height = <2340>;
 			stride = <(1080 * 4)>;
 			format = "a8r8g8b8";
+			status = "disabled";
 			/*
 			 * That's a lot of clocks, but it's necessary due
 			 * to unused clk cleanup & no panel driver yet..
@@ -103,7 +112,7 @@
 		compatible = "qcom,qca6390-pmu";
 
 		pinctrl-names = "default";
-		pinctrl-0 = <&bt_en_state>, <&wlan_en_state>, <&mdm2ap_default>, <&ap2mdm_default>, <&ap2mdm_active>;
+		pinctrl-0 = <&bt_en_state>, <&wlan_en_state>;
 
 		vddaon-supply = <&vreg_s6a_0p95>;
 		vddpmu-supply = <&vreg_s2f_0p95>;
@@ -260,6 +269,31 @@
 		};
 	};
 
+	// slimbam: dma-controller@3a84000 {
+	// 	compatible = "qcom,bam-v1.7.4", "qcom,bam-v1.7.0";
+	// 	reg = <0x0 0x3a84000 0x0 0x2c000>;
+	// 	interrupts = <GIC_SPI 164 IRQ_TYPE_LEVEL_HIGH>;
+	// 	#dma-cells = <1>;
+	// 	qcom,ee = <1>;
+	// 	qcom,num-ees = <2>;
+	// 	num-channels = <31>;
+	// 	qcom,controlled-remotely;
+	// 	iommus = <&apps_smmu 0x1826 0x00>;
+	// };
+
+	// slim_msm: slim-ngd@3ac0000  {
+	// 	compatible = "qcom,slim-ngd-v1.5.0";
+	// 	reg = <0 0x3ac0000 0 0x2c000>;
+	// 	interrupts = <GIC_SPI 163 IRQ_TYPE_LEVEL_HIGH>;
+	// 	dmas = <&slimbam 3>, <&slimbam 4>;
+	// 	dma-names = "rx", "tx";
+	// 	#address-cells = <1>;
+	// 	#size-cells = <0>;
+	// 	iommus = <&apps_smmu 0x1830 0x01>,
+	// 			<&apps_smmu 0x182f 0x00>;
+	// 	status = "disabled";
+	// };
+
 	vph_pwr: vph-pwr-regulator {
 		compatible = "regulator-fixed";
 		regulator-name = "vph_pwr";
@@ -302,6 +336,8 @@
 	vdd_boost_vreg: vdd_boost_vreg {
 		compatible = "regulator-fixed";
 		regulator-name = "vdd_boost_vreg";
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
 		startup-delay-us = <4000>;
 		enable-active-high;
 		regulator-always-on;
@@ -309,28 +345,26 @@
 	 };
 
 	ext_5v_boost: ext-5v-boost {
-		compatible = "regulator-fixed";
 		status = "okay";
-		regulator-name = "ext_5v_boost";
+		compatible = "regulator-fixed";
 		gpio = <&pm8150b_gpios 12 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-		regulator-enable-ramp-delay = <1600>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&otg_vbus_boost>;
+		regulator-min-microvolt = <5000000>;
+		regulator-max-microvolt = <5000000>;
+		regulator-enable-ramp-delay = <1600>;
+		regulator-name = "ext_5v_boost";
+		enable-active-high;
 	};
 
 	touch_vddio_vreg: touch_vddio_vreg {
 		status = "okay";
 		compatible = "regulator-fixed";
 		regulator-name = "disp_vddio_vreg";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
 		enable-active-high;
 		gpio = <&tlmm 69 0>;
-	};
-
-	xiaomi_touch: xiaomi_touch {
-		compatible = "xiaomi-touch";
-		status = "ok";
-		touch,name = "xiaomi-touch";
 	};
 
 	reserved-memory {
@@ -374,10 +408,29 @@
 			no-map;
 		};
 
-		cont_splash_region@9c000000 {
-			reg = <0x0 0x9c000000 0x0 0x2300000>;
-			label = "cont_splash_region";
+		adsp_dma_mem: memory@9E400000 {
+			reg = <0x0 0x9E400000 0x0 0xc00000>;
 			no-map;
+		};
+
+		linux,cma {
+			compatible = "shared-dma-pool";
+			size = <0x0 0x8000000>;
+			reusable;
+			linux,cma-default;
+		};
+
+		// cont_splash_region@9c000000 {
+		// 	reg = <0x0 0x9c000000 0x0 0x2300000>;
+		// 	label = "cont_splash_region";
+		// 	no-map;
+		// };
+
+		ramoops@b0000000 {
+			compatible = "ramoops";
+			reg = <0x0 0xb0000000 0x0 0x400000>;
+			record-size = <0>;
+			console-size = <0x200000>;
 		};
 	};
 };
@@ -400,47 +453,15 @@
 &adsp {
 	status = "okay";
 	firmware-name = "qcom/sm8250/umi/adsp.mbn";
+	glink-edge {
+		fastrpc {
+			memory-region = <&adsp_dma_mem>;
+		};
+	};
 };
 
-// &cpu0 {
-// 	capacity-dmips-mhz = <1024>;
-// 	dynamic-power-coefficient = <100>;
-// };
-
-// &cpu1 {
-// 	capacity-dmips-mhz = <1024>;
-// 	dynamic-power-coefficient = <100>;
-
-// };
-
-// &cpu2 {
-// 	capacity-dmips-mhz = <1024>;
-// 	dynamic-power-coefficient = <100>;
-// };
-
-// &cpu3 {
-// 	capacity-dmips-mhz = <1024>;
-// 	dynamic-power-coefficient = <100>;
-// };
-
-// &cpu4 {
-// 	capacity-dmips-mhz = <1894>;
-// 	dynamic-power-coefficient = <533>;
-// };
-
-// &cpu5 {
-// 	capacity-dmips-mhz = <1894>;
-// 	dynamic-power-coefficient = <533>;
-// };
-
-// &cpu6 {
-// 	capacity-dmips-mhz = <1894>;
-// 	dynamic-power-coefficient = <533>;
-// };
-
-// &cpu7 {
-// 	capacity-dmips-mhz = <1894>;
-// 	dynamic-power-coefficient = <642>;
+// &slim_msm {
+// 	status = "okay";
 // };
 
 &apps_rsc {
@@ -556,10 +577,10 @@
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
-		vreg_l16a_2p7: ldo16 {
-			regulator-name = "vreg_l16a_2p7";
-			regulator-min-microvolt = <2704000>;
-			regulator-max-microvolt = <2960000>;
+		vreg_l16a_3p3: ldo16 {
+			regulator-name = "vreg_l16a_3p3";
+			regulator-min-microvolt = <3024000>;
+			regulator-max-microvolt = <3304000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
 		};
 
@@ -616,6 +637,8 @@
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
 			regulator-initial-mode = <RPMH_REGULATOR_MODE_HPM>;
+			// regulator-always-on;
+			// regulator-boot-on;
 		};
 
 		vreg_l2c_1p2: ldo2 {
@@ -774,21 +797,32 @@
 };
 
 &i2c1 {
-	status = "disabled";
+	status = "okay";
 
-	// nfc@28 {
-	// 	compatible = "nxp,nxp-nci-i2c";
-	// 	reg = <0x28>;
-	// 	interrupt-parent = <&tlmm>;
-	// 	interrupts = <111 IRQ_TYPE_EDGE_RISING>;
-	// 	enable-gpios = <&tlmm 83 GPIO_ACTIVE_HIGH>;
-	// 	firmware-gpios = <&tlmm 110 GPIO_ACTIVE_HIGH>;
-	// };
+	nfc@28 {
+		compatible = "nxp,nxp-nci-i2c";
+		status = "disabled";
+		reg = <0x28>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <111 IRQ_TYPE_EDGE_RISING>;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&nfc_int_default>,
+					<&nfc_ven_default>,
+					<&nfc_clk_req_default>;
+
+		enable-gpios = <&tlmm 83 GPIO_ACTIVE_HIGH>;
+		firmware-gpios = <&tlmm 110 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &spi2 {
 	status = "okay";
-	spi-max-frequency = <0x124f800>;
+	spi-max-frequency = <19200000>;
+	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&qup_spi2_data_clk>, <&qup_spi2_cs_gpio>;
+	cs-gpios = <&tlmm 118 GPIO_ACTIVE_LOW>;
 
 	ir-spi@0 {
 		compatible = "ir-spi";
@@ -803,6 +837,7 @@
 
 	cs35l41_l: speaker-amp@40 {
 		compatible = "cirrus,cs35l41";
+		status = "okay";
 		reg = <0x40>;
 		interrupt-parent = <&tlmm>;
 		interrupts = <113 IRQ_TYPE_LEVEL_LOW>;
@@ -813,33 +848,35 @@
 		cirrus,asp-sdout-hiz = <1>;
 		cirrus,gpio2-src-select = <4>;
 		cirrus,gpio2-output-enable;
+		sound-name-prefix = "L";
 		#sound-dai-cells = <1>;
 	};
 
 	cs35l41_r: speaker-amp@42 {
 		compatible = "cirrus,cs35l41";
+		status = "okay";
 		reg = <0x42>;
-		status = "disabled";
 		interrupt-parent = <&tlmm>;
 		interrupts = <112 IRQ_TYPE_LEVEL_LOW>;
 		reset-gpios = <&tlmm 114 GPIO_ACTIVE_HIGH>;
 		cirrus,boost-peak-milliamp = <4000>;
 		cirrus,boost-ind-nanohenry = <1000>;
 		cirrus,boost-cap-microfarad = <15>;
-		cirrus,asp-sdout-hiz = <1>;
+		cirrus,asp-sdout-hiz = <3>;
 		cirrus,gpio2-src-select = <4>;
 		cirrus,gpio2-output-enable;
+		sound-name-prefix = "R";
 		#sound-dai-cells = <1>;
 	};
 };
 
 &i2c13 {
 	clock-frequency = <400000>;
-	status = "disabled";
+	status = "okay";
 
-	/* st,stmfts @ 49 */
-	fts@49 {
-		status = "disabled";
+	/* st,fts @ 49 */
+	touchscreen: fts@49 {
+		status = "okay";
 		compatible = "st,fts";
 		reg = <0x49>;
 		interrupt-parent = <&tlmm>;
@@ -847,8 +884,8 @@
 		pinctrl-names = "pmx_ts_active", "pmx_ts_suspend";
 		pinctrl-0 = <&ts_active>;
 		pinctrl-1 = <&ts_int_suspend &ts_reset_suspend>;
-		avdd-supply = <&touch_vddio_vreg>;
-		vdd-supply = <&vreg_l5a_0p875>;
+		vdd-supply = <&touch_vddio_vreg>;
+		avdd-supply = <&vreg_l1c_1p8>;
 		fts,pwr-reg-name = "avdd";
 		fts,bus-reg-name = "vdd";
 		fts,irq-gpio = <&tlmm 39 0x2008>;
@@ -859,65 +896,10 @@
 		fts,irq-flags = <0x2008>; /* IRQF_ONESHOT | IRQF_TRIGGER_LOW */
 		fts,x-max = <1080>;
 		fts,y-max = <2340>;
-		fts,fod-lx = <421>;
-		fts,fod-ly = <1788>;
-		fts,fod-x-size = <238>;
-		fts,fod-y-size = <238>;
-		fts,default-fw-name = "st_fts_j2.ftb";
-		fts,config-array-size = <2>;
-		fts,dump-click-count;
-		fts,support-fod;
-		fts,touch-up-threshold-min = <40>;
-		fts,touch-up-threshold-max = <120>;
-		fts,touch-up-threshold-def = <80>;
-		fts,touch-tolerance-min = <5>;
-		fts,touch-tolerance-max = <35>;
-		fts,touch-tolerance-def = <25>;
-		fts,touch-idletime-min = <0>;
-		fts,touch-idletime-max = <12750>;
-		fts,touch-idletime-def = <12450>;
-
-		/*edge filter rects in gamemode*/
-		fts,cornerfilter-area-step1 = <100>;
-		fts,cornerfilter-area-step2 = <170>;
-		fts,cornerfilter-area-step3 = <250>;
-		fts,touch-deadzone-filter-ver = <2 0 0 0 0 0 0 0
-							2 1 0 0 0 0 0 0
-							2 2 0 0 5 2339 0 0
-							2 3 1074 0 1079 2339 0 0>;
-		fts,touch-deadzone-filter-hor = <2 0 0 0 1079 5 0 0
-							2 1 0 2334 1079 2339 0 0
-							2 2 0 0 5 2339 0 0
-							2 3 1074 0 1079 2339 0 0>;
-		fts,touch-edgezone-filter-ver = <1 0 0 0 0 0 0 0
-							1 1 0 0 0 0 0 0
-							1 2 0 0 40 2339 0 0
-							1 3 1039 0 1079 2339 0 0>;
-		fts,touch-edgezone-filter-hor = <1 0 0 0 1079 40 0 0
-							1 1 0 2299 1079 2339 0 0
-							1 2 0 0 40 2339 0 0
-							1 3 1039 0 1079 2339 0 0>;
-		fts,touch-cornerzone-filter-ver = <0 0 0 0 0 0 0 0
-							0 1 0 0 0 0 0 0
-							0 2 0 2039 150 2339 0 0
-							0 3 929 2039 1079 2339 0 0>;
-		fts,touch-cornerzone-filter-hor1 = <0 0 0 0 170 170 0 0
-							0 1 0 0 0 0 0 0
-							0 2 0 2169 170 2339 0 0
-							0 3 0 0 0 0 0 0>;
-		fts,touch-cornerzone-filter-hor2 = <0 0 0 0 0 0 0 0
-							0 1 909 0 1079 170 0 0
-							0 2 0 0 0 0 0 0
-							0 3 909 2169 1079 2339 0 0>;
+		fts,default-fw-name = "st_fts_j2_2.ftb";
+		fts,config-array-size = <1>;
 		fts,cfg_0 {
-			fts,tp-vendor = <0x38>;
-			fts,tp-module = <0>;
-			fts,fw-name = "st_fts_j2_1.ftb";
-			fts,limit-name = "stm_fts_production_limits_1.csv";
-		};
-		fts,cfg_1 {
-			fts,tp-vendor = <0x42>;
-			fts,tp-module = <1>;
+			fts,tp-vendor = <0x48>;
 			fts,fw-name = "st_fts_j2_2.ftb";
 			fts,limit-name = "stm_fts_production_limits_2.csv";
 		};
@@ -961,7 +943,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&panel_default>, <&te_default>;
 
-		status = "disabled";
+		status = "okay";
 
 		ports {
 			#address-cells = <1>;
@@ -1007,8 +989,9 @@
 
 &pcie2 {
 	status = "okay";
-	pinctrl-0 = <&pcie2_default_state>;
-	// &mdm2ap_default &ap2mdm_default &ap2mdm_active
+	pinctrl-0 = <&pcie2_default_state>, <&mdm2ap_default>, <&ap2mdm_default>, <&ap2mdm_active>, <&nfc_int_default>,
+                    <&nfc_ven_default>,
+                    <&nfc_clk_req_default>;
 };
 
 &pcie2_phy {
@@ -1161,10 +1144,10 @@
 	status = "okay";
 };
 
-&slpi {
-	status = "disabled";
-	firmware-name = "qcom/sm8250/umi/slpi.mbn";
-};
+// &slpi {
+// 	status = "okay";
+// 	firmware-name = "qcom/sm8250/umi/slpi.mbn";
+// };
 
 &sound {
 	status = "okay";
@@ -1172,27 +1155,25 @@
 	model = "XIAOMI-UMI-WCD9380-CS35L41-VA-DMIC";
 	pinctrl-names = "default";
 	pinctrl-0 = <&tert_mi2s_active>;
+
 	audio-routing =
-		"SPK", "Main AMP",
+	    "L ASPRX1", 		"MM_DL1",
+		"L DSP RX1 Source", "L ASPRX1",
+		"L DSP1", 			"L DSP RX1 Source",
+		"L PCM Source", 	"L DSP1",
+	    "R ASPRX1", 		"MM_DL1",
+		"R DSP RX1 Source", "R ASPRX1",
+		"R DSP1", 			"R DSP RX1 Source",
+		"R PCM Source", 	"R DSP1",
 		"IN1_HPHL", "HPHL_OUT",
 		"IN2_HPHR", "HPHR_OUT",
 		"AMIC1", "MIC BIAS1",
 		"AMIC2", "MIC BIAS2",
 		"AMIC3", "MIC BIAS3",
-		"AMIC4", "MIC BIAS3",
 		"AMIC5", "MIC BIAS4",
-		"TX SWR_ADC0", "ADC1_OUTPUT",
-		"TX SWR_ADC1", "ADC2_OUTPUT",
-		"TX SWR_ADC2", "ADC3_OUTPUT",
-		"TX SWR_ADC3", "ADC4_OUTPUT",
-		"TX SWR_DMIC0", "DMIC1_OUTPUT",
-		"TX SWR_DMIC1", "DMIC2_OUTPUT",
-		"TX SWR_DMIC2", "DMIC3_OUTPUT",
-		"TX SWR_DMIC3", "DMIC4_OUTPUT",
-		"TX SWR_DMIC4", "DMIC5_OUTPUT",
-		"TX SWR_DMIC5", "DMIC6_OUTPUT",
-		"TX SWR_DMIC6", "DMIC7_OUTPUT",
-		"TX SWR_DMIC7", "DMIC8_OUTPUT";
+		"MM_DL1",  "MultiMedia1 Playback",
+		"MM_DL2",  "MultiMedia2 Playback",
+		"MultiMedia3 Capture", "MM_UL3";
 
 	mm1-dai-link {
 		link-name = "MultiMedia1";
@@ -1237,6 +1218,7 @@
 		codec {
 			sound-dai = <&wcd938x 1>, <&swr2 0>, <&txmacro 0>;
 		};
+
 		platform {
 			sound-dai = <&q6routing>;
 		};
@@ -1253,31 +1235,39 @@
 		};
 
 		codec {
-			sound-dai = <&cs35l41_l 0>;//, <&cs35l41_r 0>;
+			sound-dai = <&cs35l41_l 0>, <&cs35l41_r 0>;
 		};
 	};
 
-	va-dai-link {
-		link-name = "VA Capture";
-		cpu {
-			sound-dai = <&q6afedai VA_CODEC_DMA_TX_0>;
-		};
+	// bt-slim-playback-dai-link {
+	// 	link-name = "Bluetooth Slimbus Playback";
+	// 	cpu {
+	// 		sound-dai = <&q6afedai SLIMBUS_0_TX>;
+	// 	};
 
-		platform {
-			sound-dai = <&q6routing>;
-		};
+	// 	platform {
+	// 		sound-dai = <&qca6390_bt 0>;
+	// 	};
 
-		codec {
-			sound-dai = <&vamacro 0>;
-		};
-	};
-};
+	// 	// codec {
+	// 	// 	sound-dai = <&qca6390_bt 0>;
+	// 	// };
+	// };
 
-&vamacro {
-	pinctrl-0 = <&dmic01_active>;
-	pinctrl-names = "default";
-	vdd-micb-supply = <&vreg_s4a_1p8>;
-	qcom,dmic-sample-rate = <600000>;
+	// bt-slim-capture-dai-link {
+	// 	link-name = "Bluetooth Slimbus Capture";
+	// 	cpu {
+	// 		sound-dai = <&q6afedai SLIMBUS_0_RX>;
+	// 	};
+
+	// 	platform {
+	// 		sound-dai = <&q6routing>;
+	// 	};
+		
+	// 	// codec {
+	// 	// 	sound-dai = <&qca6390_bt 0>;
+	// 	// };
+	// };
 };
 
 &q6afedai {
@@ -1319,13 +1309,19 @@
 	};
 };
 
-&tert_mi2s_active{
+&tert_mi2s_active {
+	/delete-node/ data0-pins;
+
+	ws-pins {
+		/delete-property/ output-high;
+	};
+
 	data1-pins {
 		pins = "gpio137";
 		function = "mi2s2_data1";
 		drive-strength = <8>;
 		bias-disable;
-		output-high;
+		// output-high;
 	};
 };
 
@@ -1346,6 +1342,20 @@
 		bias-disable;
 		output-low;
 	};
+	
+	bt_slim_active: bt-slim-active {
+		pins = "gpio142", "gpio143";
+		function = "lpass_slimbus";
+		drive-strength = <8>;
+		bias-disable;
+	};
+
+	ts_active: ts_rst_active {
+		pins = "gpio38", "gpio39";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-up;
+	};
 
 	ts_int_suspend: ts_int_suspend {
 		pins = "gpio39";
@@ -1354,24 +1364,11 @@
 		bias-pull-down;
 	};
 
-	ts_active: ts_active {
-		pins = "gpio38", "gpio39";
-		function = "gpio";
-		drive-strength = <8>;
-		bias-pull-up;
-	};
-
 	ts_reset_suspend: ts_reset_suspend {
 		pins = "gpio38";
 		function = "gpio";
 		drive-strength = <2>;
 		bias-pull-down;
-	};
-
-	ts_release: ts_release {
-		pins = "gpio38", "gpio39";
-		function = "gpio";
-		drive-strength = <2>;
 	};
 
 	mdm2ap_default: mdm2ap-default-state {
@@ -1401,7 +1398,7 @@
 		pins = "gpio21";
 		function = "gpio";
 		drive-strength = <16>;
-		output-low;
+		output-high;
 		bias-pull-up;
 	};
 
@@ -1426,20 +1423,43 @@
 		drive-strength = <2>;
 		bias-pull-down;
 	};
+
+	nfc_clk_req_default: nfc-clk-req-default-state {
+		pins = "gpio7";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	nfc_ven_default: nfc-ven-default-state {
+		pins = "gpio83", "gpio110";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+	};
+
+	nfc_int_default: nfc-int-default-state {
+		pins = "gpio111";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-up;
+		input-enable;
+	};
 };
 
 &uart6 {
 	status = "okay";
 
-	bluetooth {
+	qca6390_bt: bluetooth {
 		compatible = "qcom,qca6390-bt";
-
+		// When will it support btfm ?
+		// #sound-dai-cells = <0>;
 		vddrfacmn-supply = <&vreg_pmu_rfa_cmn>;
 		vddaon-supply = <&vreg_pmu_aon_0p59>;
 		vddbtcmx-supply = <&vreg_pmu_btcmx_0p85>;
 		vddrfa0p8-supply = <&vreg_pmu_rfa_0p8>;
 		vddrfa1p2-supply = <&vreg_pmu_rfa_1p2>;
-		vddrfa1p7-supply = <&vreg_pmu_rfa_1p7>;
+		vddrfa1p7-supply = <&vreg_pmu_rfa_1p7>;		
 	};
 };
 
