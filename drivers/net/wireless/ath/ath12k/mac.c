@@ -4404,15 +4404,15 @@ int ath12k_mac_get_fw_stats(struct ath12k *ar,
 	 * Below loop is to confirm that firmware completed sending all the event
 	 * and fw_stats_done is marked true when end is marked in the TLV.
 	 */
-	for (;;) {
-		if (time_after(jiffies, timeout))
-			break;
+	while (!time_after(jiffies, timeout)) {
 		spin_lock_bh(&ar->data_lock);
 		if (ar->fw_stats.fw_stats_done) {
 			spin_unlock_bh(&ar->data_lock);
 			break;
 		}
 		spin_unlock_bh(&ar->data_lock);
+		/* Add a small delay to prevent CPU hogging */
+		msleep(5);
 	}
 	return 0;
 }
