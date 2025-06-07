@@ -80,8 +80,8 @@ static void sy7758_init(struct sy7758 *sydev)
 	sy7758_write(sydev, 0xa1, 0x9a);
 	sy7758_write(sydev, 0xa9, 0x80);
 	sy7758_write(sydev, 0xa2, 0x28);
-
-	
+	/* Wait init done */
+	msleep(10);
 	sy7758_write(sydev, 0x10, 0x40);
 	sy7758_write(sydev, 0x11, 0x01);
 	// Max brightness
