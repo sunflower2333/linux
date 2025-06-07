@@ -26,7 +26,7 @@
 	model = "Xiaomi Technologies, Inc. Mi10";
 	compatible = "qcom,sm8250-mtp", "qcom,sm8250";
 	chassis-type = "handset";
-    qcom,msm-id = <0x164 0x20001>;
+	qcom,msm-id = <0x164 0x20001>;
 	qcom,board-id = <0x2b 0x00>;
 
 	aliases {
@@ -35,14 +35,14 @@
 	};
 	
 	memory {
-        ddr_device_type = <0x08>;
-        device_type = "memory";
+		ddr_device_type = <0x08>;
+		device_type = "memory";
 		#address-cells = <2>;
 		#size-cells = <2>;
-        reg = <0x0 0x80000000 0x0 0x3b800000>,
-		<0x1 0x80000000 0x1 0x0>,
-		<0x0 0xc0000000 0x0 0xc0000000>;
-    };
+		reg = 	<0x0 0x80000000 0x0 0x3b800000>,
+				<0x1 0x80000000 0x1 0x0>,
+				<0x0 0xc0000000 0x0 0xc0000000>;
+	};
 
 	wcd938x: audio-codec {
 		compatible = "qcom,wcd9380-codec";
@@ -990,8 +990,8 @@
 &pcie2 {
 	status = "okay";
 	pinctrl-0 = <&pcie2_default_state>, <&mdm2ap_default>, <&ap2mdm_default>, <&ap2mdm_active>, <&nfc_int_default>,
-                    <&nfc_ven_default>,
-                    <&nfc_clk_req_default>;
+					<&nfc_ven_default>,
+					<&nfc_clk_req_default>;
 };
 
 &pcie2_phy {
@@ -1157,11 +1157,11 @@
 	pinctrl-0 = <&tert_mi2s_active>;
 
 	audio-routing =
-	    "L ASPRX1", 		"MM_DL1",
+		"L ASPRX1", 		"MM_DL1",
 		"L DSP RX1 Source", "L ASPRX1",
 		"L DSP1", 			"L DSP RX1 Source",
 		"L PCM Source", 	"L DSP1",
-	    "R ASPRX1", 		"MM_DL1",
+		"R ASPRX1", 		"MM_DL1",
 		"R DSP RX1 Source", "R ASPRX1",
 		"R DSP1", 			"R DSP RX1 Source",
 		"R PCM Source", 	"R DSP1",
@@ -1387,12 +1387,12 @@
 	};
 
 	ap2mdm_active: ap2mdm-active-state {
-        pins = "gpio56";
-        function = "gpio";
-        drive-strength = <16>;
+		pins = "gpio56";
+		function = "gpio";
+		drive-strength = <16>;
 		bias-disable;
 		output-high;
-    };
+	};
 
 	bt_en_state: bt-default-state {
 		pins = "gpio21";
