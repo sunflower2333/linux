@@ -210,7 +210,7 @@
 		pinctrl-0 = <&fan0_pwr_active>, <&pwm_fan_ctrl_default>, <&fan0_int_active>;
 		pinctrl-1 = <&fan0_pwr_sleep>;
 		pwms = <&pm8550_pwm 3 1000000>;
-		cooling-levels = <255 255 255 255 220 200 200 180 170 64 32 16 0>;
+		cooling-levels = <255 230 205 180 155 130 105 80 60 45 32 16 0>;
 	};
 
 	thermal-zones {
