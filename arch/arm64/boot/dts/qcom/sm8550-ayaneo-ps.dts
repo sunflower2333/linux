@@ -28,6 +28,7 @@
 	aliases {
 		serial0 = &uart7;
 		serial1 = &uart14;
+		hsuart0 = &uart11;
 		display0 = &display0;
 	};
 
@@ -1099,20 +1100,24 @@
 
 &qupv3_id_1 {
 	status = "okay";
-	/* UART seems enabled in android */
-	// uart11: uart@88c000 {
-	// 	compatible = "qcom,geni-uart";
-	// 	reg = <0 0x0088c000 0 0x4000>;
-	// 	clock-names = "se";
-	// 	clocks = <&gcc GCC_QUPV3_WRAP2_S3_CLK>;
-	// 	pinctrl-names = "default";
-	// 	pinctrl-0 = <&qup_uart11_default>;
-	// 	interrupts = <GIC_SPI 585 IRQ_TYPE_LEVEL_HIGH>;
-	// 	interconnects = <&clk_virt MASTER_QUP_CORE_2 0 &clk_virt SLAVE_QUP_CORE_2 0>,
-	// 					<&gem_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_QUP_2 0>;
-	// 	interconnect-names = "qup-core", "qup-config";
-	// 	status = "disabled";
-	// };
+	/* AYANEO Controller serial interface */
+	uart11: uart@88c000 {
+		compatible = "qcom,geni-uart";
+		reg = <0 0x0088c000 0 0x4000>;
+		clock-names = "se";
+		clocks = <&gcc GCC_QUPV3_WRAP2_S3_CLK>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&qup_uart11_default>;
+		interrupts = <GIC_SPI 585 IRQ_TYPE_LEVEL_HIGH>;
+		interconnects = <&clk_virt MASTER_QUP_CORE_2 QCOM_ICC_TAG_ALWAYS
+						 &clk_virt SLAVE_QUP_CORE_2 QCOM_ICC_TAG_ALWAYS>,
+						<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
+						&config_noc SLAVE_QUP_2 QCOM_ICC_TAG_ACTIVE_ONLY>;
+		interconnect-names = "qup-core", "qup-config";
+		operating-points-v2 = <&qup_opp_table_100mhz>;
+		power-domains = <&rpmhpd RPMHPD_CX>;
+		status = "okay";
+	};
 };
 
 &remoteproc_adsp {
@@ -1297,6 +1302,14 @@
 		function = "qup2_se3";
 		drive-strength = <2>;
 		bias-disable;
+	};
+
+	qup_uart11_sleep: qup-uart11-sleep-state {
+		/* TX, RX */
+		pins = "gpio70", "gpio71";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
 	};
 
 	upd720201_active: upd720201-active {
