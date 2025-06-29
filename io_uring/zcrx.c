@@ -106,8 +106,10 @@ static int io_import_dmabuf(struct io_zcrx_ifq *ifq,
 	for_each_sgtable_dma_sg(mem->sgt, sg, i)
 		total_size += sg_dma_len(sg);
 
-	if (total_size < off + len)
-		return -EINVAL;
+	if (total_size < off + len) {
+		ret = -EINVAL;
+		goto err;
+	}
 
 	mem->dmabuf_offset = off;
 	mem->size = len;
@@ -366,7 +368,8 @@ static void io_free_rbuf_ring(struct io_zcrx_ifq *ifq)
 
 static void io_zcrx_free_area(struct io_zcrx_area *area)
 {
-	io_zcrx_unmap_area(area->ifq, area);
+	if (area->ifq)
+		io_zcrx_unmap_area(area->ifq, area);
 	io_release_area_mem(&area->mem);
 
 	kvfree(area->freelist);
@@ -631,12 +634,13 @@ ifq_free:
 void io_unregister_zcrx_ifqs(struct io_ring_ctx *ctx)
 {
 	struct io_zcrx_ifq *ifq;
-	unsigned long id;
 
 	lockdep_assert_held(&ctx->uring_lock);
 
 	while (1) {
 		scoped_guard(mutex, &ctx->mmap_lock) {
+			unsigned long id = 0;
+
 			ifq = xa_find(&ctx->zcrx_ctxs, &id, ULONG_MAX, XA_PRESENT);
 			if (ifq)
 				xa_erase(&ctx->zcrx_ctxs, id);
