@@ -148,7 +148,7 @@ static int wt0600_get_modes(struct drm_panel *panel,
 	return drm_connector_helper_get_modes_fixed(connector, &wt0600_mode);
 }
 
-static enum drm_panel_orientation nt36532e_get_orientation(struct drm_panel *panel)
+static enum drm_panel_orientation wt0600_get_orientation(struct drm_panel *panel)
 {
 	struct wt0600 *ctx = panel_to_ctx(panel);
 
@@ -160,7 +160,7 @@ static const struct drm_panel_funcs wt0600_panel_funcs = {
 	.prepare = wt0600_prepare,
 	.unprepare = wt0600_unprepare,
 	.get_modes = wt0600_get_modes,
-	.get_orientation = nt36532e_get_orientation,
+	.get_orientation = wt0600_get_orientation,
 };
 
 static int wt0600_probe(struct mipi_dsi_device *dsi)
