@@ -468,6 +468,12 @@ config TOUCHSCREEN_HYNITRON_CSTXXX
 	  To compile this driver as a module, choose M here: the
 	  module will be called hynitron-cstxxx.
 
+config TOUCHSCREEN_HYNITRON_ALL
+	tristate "Hynitron touchscreen support"
+	depends on I2C
+	help
+		Support Hynitron 66xx/3240/92xx/3xx/1xx/7xx/8xxt
+
 config TOUCHSCREEN_ILI210X
 	tristate "Ilitek ILI210X based touchscreen"
 	depends on I2C
