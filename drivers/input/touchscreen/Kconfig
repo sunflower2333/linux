@@ -477,17 +477,11 @@ config TOUCHSCREEN_HYNITRON_CSTXXX
 	  To compile this driver as a module, choose M here: the
 	  module will be called hynitron-cstxxx.
 
-config TOUCHSCREEN_HYNITRON_CST816X
-	tristate "Hynitron CST816x touchscreen"
+config TOUCHSCREEN_HYNITRON_ALL
+	tristate "Hynitron touchscreen support"
 	depends on I2C
 	help
-	  Say Y here if you have a touchscreen using a Hynitron
-	  CST816x series touchscreen controller.
-
-	  If unsure, say N.
-
-	  To compile this driver as a module, choose M here: the
-	  module will be called hynitron-cst816x.
+		Support Hynitron 66xx/3240/92xx/3xx/1xx/7xx/8xxt
 
 config TOUCHSCREEN_ILI210X
 	tristate "Ilitek ILI210X based touchscreen"
