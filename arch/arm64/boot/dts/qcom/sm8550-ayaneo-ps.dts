@@ -86,6 +86,19 @@
 		};
 	};
 
+	fan0: pwm-fan {
+		compatible = "pwm-fan";
+		status = "okay";
+		#cooling-cells = <2>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <64 IRQ_TYPE_EDGE_FALLING>;
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&fan0_pwr_active>, <&pwm_fan_ctrl_default>, <&fan0_int_active>;
+		pinctrl-1 = <&fan0_pwr_sleep>;
+		pwms = <&pm8550_pwm 3 1000000>;
+		cooling-levels = <255 230 205 180 155 130 105 80 60 45 32 16 0>;
+	};
+
 	gpio-keys {
 		compatible = "gpio-keys";
 
@@ -198,19 +211,6 @@
 		regulator-max-microvolt = <3700000>;
 		regulator-always-on;
 		regulator-boot-on;
-	};
-
-	fan0: pwm-fan {
-		compatible = "pwm-fan";
-		// status = "disabled";
-		#cooling-cells = <2>;
-		interrupt-parent = <&tlmm>;
-		interrupts = <64 IRQ_TYPE_EDGE_FALLING>;
-		pinctrl-names = "default", "sleep";
-		pinctrl-0 = <&fan0_pwr_active>, <&pwm_fan_ctrl_default>, <&fan0_int_active>;
-		pinctrl-1 = <&fan0_pwr_sleep>;
-		pwms = <&pm8550_pwm 3 1000000>;
-		cooling-levels = <255 230 205 180 155 130 105 80 60 45 32 16 0>;
 	};
 
 	thermal-zones {
@@ -780,7 +780,7 @@
 		interrupt-parent = <&tlmm>;
 		interrupts = <25 IRQ_TYPE_EDGE_FALLING>;
 
-		reset-gpios = <&tlmm 24 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&tlmm 24 GPIO_ACTIVE_LOW>;
 		VDDIO-supply = <&vreg_l14b_3p2>;
 		AVDD28-supply = <&vreg_l14b_3p2>;
 
@@ -1082,20 +1082,6 @@
 
 &qupv3_id_0 {
 	status = "okay";
-	/* UART seems enabled in android */
-	// uart5: uart@a94000 {
-	// 	compatible = "qcom,geni-uart";
-	// 	reg = <0 0x00a94000 0 0x4000>;
-	// 	clock-names = "se";
-	// 	clocks = <&gcc GCC_QUPV3_WRAP1_S5_CLK>;
-	// 	pinctrl-names = "default";
-	// 	pinctrl-0 = <&qup_uart5_default>;
-	// 	interrupts = <GIC_SPI 358 IRQ_TYPE_LEVEL_HIGH>;
-	// 	interconnects = <&clk_virt MASTER_QUP_CORE_1 0 &clk_virt SLAVE_QUP_CORE_1 0>,
-	// 					<&gem_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_QUP_1 0>;
-	// 	interconnect-names = "qup-core", "qup-config";
-	// 	status = "disabled";
-	// };
 };
 
 &qupv3_id_1 {
@@ -1130,12 +1116,6 @@
 	firmware-name = "qcom/sm8550/ayaneo/cdsp.mdt",
 			"qcom/sm8550/ayaneo/cdsp_dtb.mdt";
 	status = "okay";
-};
-
-&remoteproc_mpss {
-	firmware-name = "qcom/sm8550/ayaneo/modem.mdt",
-			"qcom/sm8550/ayaneo/modem_dtb.mdt";
-	status = "disabled";
 };
 
 &sdhc_2 {
