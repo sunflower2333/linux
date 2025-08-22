@@ -1147,13 +1147,16 @@ config DRM_PANEL_WIDECHIPS_WS2401
 	  This display is used in the Samsung Galaxy Ace 2 GT-I8160 (Codina).
 
 config DRM_PANEL_AYANEO_WT0600_2K
-      tristate "Ayaneo WT0600 2K 60hz panel driver"
-      depends on OF
-      depends on DRM_MIPI_DSI
-      depends on BACKLIGHT_CLASS_DEVICE
-      help
-        Say Y here if you want to enable support for Ayaneo WT0600
-        1440x2560 60hz Dual-DSI None-DSC Display Panel.
+	tristate "Ayaneo WT0600/WT0630 2K dual-DSI video mode panels"
+	depends on OF
+	depends on DRM_MIPI_DSI
+	depends on BACKLIGHT_CLASS_DEVICE
+	help
+	  Say Y here if you want to enable support for Ayaneo WT0600 and WT0630
+	  1440x2560 60Hz dual-DSI video mode display panels. These panels are
+	  used in Ayaneo handheld gaming devices.
+
+	  To compile this driver as a module, choose M here.
 
 config DRM_PANEL_AR02_HALF_FHD
       tristate "Ayaneo Pocket DMG 60hz half fhd panel driver"
