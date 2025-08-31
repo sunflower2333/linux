@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 /*
  * Copyright (c) 2024 Linaro Limited
+ * Copyright (c) 2025, Kancy Joe <kancy2333@outlook.com>
  */
 
 /dts-v1/;
@@ -271,7 +272,9 @@
 		audio-routing = "SpkrLeft IN", "WSA_SPK1 OUT",
 				"SpkrRight IN", "WSA_SPK2 OUT",
 				"VA DMIC0", "vdd-micb",
-				"VA DMIC1", "vdd-micb";
+				"VA DMIC1", "vdd-micb",
+				"VA DMIC2", "vdd-micb",
+				"VA DMIC3", "vdd-micb";
 
 		wsa-dai-link {
 			link-name = "WSA Playback";
@@ -882,12 +885,12 @@
 		pinctrl-0 = <&sde_dsi_active>;
 		pinctrl-1 = <&sde_dsi_suspend>;
 
-		vdd-supply = <&vreg_l11b_1p2>;
-		vci-supply = <&vreg_l13b_3p0>;
-		vddio-supply = <&vreg_l12b_1p8>;
+		// vdd-supply = <&vreg_l11b_1p2>;
+		// vci-supply = <&vreg_l13b_3p0>;
+		// vddio-supply = <&vreg_l12b_1p8>;
 		avdd-supply = <&sgm3804>;
 
-		reset-gpios = <&tlmm 133 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
 		backlight = <&sy7758_bl>;
 
 		ports {
@@ -1196,14 +1199,6 @@
 			function = "gpio";
 			bias-pull-down;
 		};
-	};
-
-	wcd_default: wcd-reset-n-active-state {
-		pins = "gpio108";
-		function = "gpio";
-		drive-strength = <16>;
-		bias-disable;
-		output-low;
 	};
 
 	wlan_en: wlan-en-state {
