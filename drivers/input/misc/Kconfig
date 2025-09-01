@@ -167,6 +167,16 @@ config INPUT_E3X0_BUTTON
 	  To compile this driver as a module, choose M here: the
 	  module will be called e3x0_button.
 
+config INPUT_FT_FINGERPRINT
+	tristate "FocalTech Fingerprint Sensor input driver"
+	default n
+	help
+	  Say Y here to enable support for the FocalTech Fingerprint Sensor.
+
+	  To compile this driver as a module, choose M here: the
+	  module will be called focaltech-fingerpr.
+
+
 config INPUT_PCSPKR
 	tristate "PC Speaker support"
 	depends on PCSPKR_PLATFORM
