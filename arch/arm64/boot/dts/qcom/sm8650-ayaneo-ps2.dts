@@ -9,21 +9,20 @@
 #include <dt-bindings/leds/common.h>
 #include <dt-bindings/regulator/qcom,rpmh-regulator.h>
 #include "sm8650.dtsi"
-// #include "pm8010.dtsi"
 #include "pm8550.dtsi"
 #include "pm8550b.dtsi"
 #define PMK8550VE_SID 8
 #include "pm8550ve.dtsi"
 #include "pm8550vs.dtsi"
 #include "pmk8550.dtsi"
-// #include "pmr735d_a.dtsi"
 
 /delete-node/ &rmtfs_mem;
 /delete-node/ &hwfence_shbuf;
 /delete-node/ &ufs_opp_table;
+
 / {
 	model = "AYANEO Pocket S2 (Pro)";
-	compatible = "qcom,sm8650-qrd", "qcom,sm8650";
+	compatible = "ayaneo,pocket-s2", "qcom,sm8650";
 
 	aliases {
 		serial0 = &uart15;
@@ -36,29 +35,16 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
-		// stdout-path = "display0";
-		// bootargs = "fbcon=rotate:1 panic=30 loglevel=7 efi=novamap init=/sbin/init root=/dev/sda10 rw rootwait console=ttyS0,115200 console=tty1 systemd.journald.forward_to_console=true systemd.log_level=debug systemd.log_target=kmsg log_buf_len=10M printk.devkmsg=on allow_mismatched_32bit_el0 kasan=off";
 		display0: framebuffer@b8000000 {
 			compatible = "simple-framebuffer";
 			reg = <0 0xd5100000 0 0x2b00000>;
-			status = "okay";
+			status = "disabled";
 			width = <1440>;
 			height = <2560>;
 			stride = <(1440 * 4)>;
 			format = "a8r8g8b8";
 			clocks = <&gcc GCC_DISP_AHB_CLK>,
 				<&gcc GCC_DISP_HF_AXI_CLK>;
-			 	// <&dispcc DISP_CC_MDSS_AHB_CLK>,
-				// <&dispcc DISP_CC_MDSS_MDP_CLK>,
-				// <&dispcc DISP_CC_MDSS_BYTE0_CLK>,
-				// <&dispcc DISP_CC_MDSS_BYTE0_INTF_CLK>,
-				// <&dispcc DISP_CC_MDSS_PCLK0_CLK>,
-				// <&dispcc DISP_CC_MDSS_ESC0_CLK>,
-				// <&dispcc DISP_CC_MDSS_BYTE1_CLK>,
-				// <&dispcc DISP_CC_MDSS_BYTE1_INTF_CLK>,
-				// <&dispcc DISP_CC_MDSS_PCLK1_CLK>,
-				// <&dispcc DISP_CC_MDSS_ESC1_CLK>;
-			// power-domains = <&dispcc MDSS_GDSC>;
 		};
 	};
 
@@ -78,7 +64,7 @@
 	gpio-keys {
 		compatible = "gpio-keys";
 
-		pinctrl-0 = <&volume_up_n>,<&turbo_key_default>,<&tlmm_key_default>;
+		pinctrl-0 = <&volume_up_n>, <&turbo_key_default>, <&tlmm_key_default>;
 		pinctrl-names = "default";
 
 		key-volume-up {
@@ -97,8 +83,7 @@
 			     "qcom,pmic-glink";
 		#address-cells = <1>;
 		#size-cells = <0>;
-		// Unused
-		// orientation-gpios = <&tlmm 29 GPIO_ACTIVE_HIGH>;
+		orientation-gpios = <&tlmm 29 GPIO_ACTIVE_HIGH>;
 
 		connector@0 {
 			compatible = "usb-c-connector";
@@ -106,6 +91,7 @@
 
 			power-role = "dual";
 			data-role = "dual";
+			self-powered;
 
 			ports {
 				#address-cells = <1>;
@@ -126,7 +112,7 @@
 						remote-endpoint = <&redriver_ss_out>;
 					};
 				};
-
+				
 				port@2 {
 					reg = <2>;
 
@@ -142,18 +128,13 @@
 		compatible = "qcom,sm8650-sndcard", "qcom,sm8450-sndcard";
 		model = "SM8650-APS2";
 		audio-routing = "SpkrLeft IN", "WSA_SPK1 OUT",
-				"SpkrRight IN", "WSA_SPK2 OUT",
-				"IN1_HPHL", "HPHL_OUT",
-				"IN2_HPHR", "HPHR_OUT",
-				"AMIC1", "MIC BIAS1",
-				"AMIC2", "MIC BIAS2",
-				"AMIC3", "MIC BIAS3",
-				"AMIC4", "MIC BIAS3",
-				"AMIC5", "MIC BIAS4",
-				"TX SWR_INPUT0", "ADC1_OUTPUT",
-				"TX SWR_INPUT1", "ADC2_OUTPUT",
-				"TX SWR_INPUT2", "ADC3_OUTPUT",
-				"TX SWR_INPUT3", "ADC4_OUTPUT";
+						"SpkrRight IN", "WSA_SPK2 OUT",
+						"IN1_HPHL", "HPHL_OUT",
+						"IN2_HPHR", "HPHR_OUT",
+						"DMIC1", "MIC BIAS1",
+						"DMIC2", "MIC BIAS2",
+						"TX SWR_INPUT4", "DMIC1_OUTPUT",
+						"TX SWR_INPUT5", "DMIC2_OUTPUT";
 
 		wcd-playback-dai-link {
 			link-name = "WCD Playback";
@@ -195,7 +176,7 @@
 			};
 
 			codec {
-				sound-dai = <&left_spkr>, <&right_spkr>, <&swr0 0>, <&lpass_wsamacro 0>;
+				sound-dai = <&right_spkr>, <&left_spkr>, <&swr3 0>, <&lpass_wsa2macro 0>;
 			};
 
 			platform {
@@ -229,44 +210,14 @@
 		};
 	};
 
-	/* Overwrite opp table */
-	ufshc@1d84000 {
-		ufs_opp_table: opp-table {
-			opp-100000000 {
-				opp-hz = /bits/ 64 <100000000>,
-						/bits/ 64 <0>,
-						/bits/ 64 <0>,
-						/bits/ 64 <100000000>,
-						/bits/ 64 <0>,
-						/bits/ 64 <0>,
-						/bits/ 64 <0>,
-						/bits/ 64 <0>;
-				required-opps = <&rpmhpd_opp_low_svs>;
-			};
-
-			opp-403000000 {
-				opp-hz = /bits/ 64 <403000000>,
-						/bits/ 64 <0>,
-						/bits/ 64 <0>,
-						/bits/ 64 <403000000>,
-						/bits/ 64 <0>,
-						/bits/ 64 <0>,
-						/bits/ 64 <0>,
-						/bits/ 64 <0>;
-				required-opps = <&rpmhpd_opp_nom>;
-			};
-		};
-	};
-
-	vph_pwr: vph-pwr-regulator {
-		compatible = "regulator-fixed";
-
-		regulator-name = "vph_pwr";
-		regulator-min-microvolt = <3700000>;
-		regulator-max-microvolt = <3700000>;
-
-		regulator-always-on;
-		regulator-boot-on;
+	focal_fingerpr: focal-fingerpr {
+		compatible = "focaltech,fingerpr";
+		pinctrl-0 = <&fingerpr_rst_active>, <&fingerpr_irq_active>;
+		pinctrl-names = "default";
+		interrupt-parent = <&tlmm>;
+		interrupts = <92 IRQ_TYPE_EDGE_RISING>;
+		reset-gpios = <&tlmm 90 GPIO_ACTIVE_HIGH>;
+		status = "okay";
 	};
 
 	wcd939x: audio-codec {
@@ -302,6 +253,17 @@
 				remote-endpoint = <&wcd_usbss_headset_out>;
 			};
 		};
+	};
+
+	vph_pwr: vph-pwr-regulator {
+		compatible = "regulator-fixed";
+
+		regulator-name = "vph_pwr";
+		regulator-min-microvolt = <3700000>;
+		regulator-max-microvolt = <3700000>;
+
+		regulator-always-on;
+		regulator-boot-on;
 	};
 
 	wcn7850-pmu {
@@ -365,14 +327,6 @@
 			};
 		};
 	};
-};
-
-/* DMIC 01 23 */
-&lpass_vamacro {
-	pinctrl-0 = <&dmic01_default>, <&dmic23_default>;
-	pinctrl-names = "default";
-	vdd-micb-supply = <&vreg_l15b_1p8>;
-	qcom,dmic-sample-rate = <4800000>;
 };
 
 &apps_rsc {
@@ -522,6 +476,8 @@
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
+			regulator-always-on;
+			regulator-boot-on;
 		};
 
 		vreg_l17b_2p5: ldo17 {
@@ -610,6 +566,8 @@
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
+			regulator-always-on;
+			regulator-boot-on;
 		};
 	};
 
@@ -791,15 +749,15 @@
 		touchscreen-size-y = <2560>;
 
 		pinctrl-names = "default";
-		pinctrl-0 = <&ts_reset_default>, <&ts_irq_default>, <&usb_typec_pwr_en>;
+		pinctrl-0 = <&ts_reset_default>, <&ts_irq_default>;
 	};
 };
 
 &i2c6 {
 	status = "okay";
 	
-	/* RTC6612 FM Reciver */
-	// rtc6612@64 {
+	/* RTC6226 FM Reciver */
+	// rtc6226@64 {
 	// };
 
 	typec-mux@1c {
@@ -810,6 +768,8 @@
 
 		retimer-switch;
 		orientation-switch;
+		pinctrl-0 = <&usb_typec_pwr_en>;
+		pinctrl-names = "default";
 
 		ports {
 			#address-cells = <1>;
@@ -847,7 +807,10 @@
 		regulator-name = "panel-avdd";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		reset-gpios = <&tlmm 59 GPIO_ACTIVE_HIGH>, <&tlmm 58 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&tlmm 59 GPIO_ACTIVE_HIGH>,
+					<&tlmm 58 GPIO_ACTIVE_HIGH>,
+					<&tlmm 163 GPIO_ACTIVE_HIGH>,
+					<&tlmm 164 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 	};
 
@@ -862,7 +825,7 @@
 &ipa {
 	qcom,gsi-loader = "self";
 	memory-region = <&ipa_fw_mem>;
-	firmware-name = "qcom/sm8650/ayaneo/ps2/ipa_fws.mdt";
+	firmware-name = "qcom/sm8650/ayaneo/ps2/ipa_fws.mbn";
 	status = "okay";
 };
 
@@ -878,14 +841,16 @@
 	};
 };
 
-&lpass_tlmm {
-	spkr_1_sd_n_active: spkr-1-sd-n-active-state {
-		pins = "gpio21";
-		function = "gpio";
-		drive-strength = <16>;
-		bias-disable;
-		output-low;
-	};
+/* DMIC 01 23 */
+&lpass_vamacro {
+	pinctrl-0 = <&dmic01_default>;
+	pinctrl-names = "default";
+	vdd-micb-supply = <&vreg_l15b_1p8>;
+	qcom,dmic-sample-rate = <4800000>;
+};
+
+&lpass_wsa2macro {
+	status = "okay";
 };
 
 &mdss {
@@ -971,6 +936,8 @@
 };
 
 &mdss_dp0_out {
+	/* 4 lane is broken */
+	/* also seems 2 lane mode does not support 4k output */
 	data-lanes = <0 1>;
 };
 
@@ -1074,11 +1041,13 @@
 
 &pm8550_pwm {
 	status = "okay";
+	#address-cells = <1>;
+	#size-cells = <0>;
 
 	multi-led {
 		color = <LED_COLOR_ID_RGB>;
 		function = LED_FUNCTION_STATUS;
-
+		linux,default-trigger = "usbport";
 		#address-cells = <1>;
 		#size-cells = <0>;
 
@@ -1142,15 +1111,15 @@
 };
 
 &remoteproc_adsp {
-	firmware-name = "qcom/sm8650/ayaneo/ps2/adsp.mbn",
-			"qcom/sm8650/ayaneo/ps2/adsp_dtb.mbn";
+	firmware-name = "qcom/sm8650/ayaneo/ps2/adsp.mdt",
+			"qcom/sm8650/ayaneo/ps2/adsp_dtb.mdt";
 
 	status = "okay";
 };
 
 &remoteproc_cdsp {
-	firmware-name = "qcom/sm8650/ayaneo/ps2/cdsp.mdt",
-			"qcom/sm8650/ayaneo/ps2/cdsp_dtb.mdt";
+	firmware-name = "qcom/sm8650/ayaneo/ps2/cdsp.mbn",
+			"qcom/sm8650/ayaneo/ps2/cdsp_dtb.mbn";
 
 	status = "okay";
 };
@@ -1193,56 +1162,6 @@
 	clock-frequency = <32764>;
 };
 
-&swr0 {
-	status = "okay";
-
-	/* WSA8845, Speaker Left */
-	left_spkr: speaker@0,0 {
-		compatible = "sdw20217020400";
-		reg = <0 0>;
-		pinctrl-0 = <&spkr_1_sd_n_active>;
-		pinctrl-names = "default";
-		powerdown-gpios = <&lpass_tlmm 21 GPIO_ACTIVE_LOW>;
-		#sound-dai-cells = <0>;
-		sound-name-prefix = "SpkrLeft";
-		vdd-1p8-supply = <&vreg_l15b_1p8>;
-		vdd-io-supply = <&vreg_l3c_1p2>;
-
-		/*
-		 * WSA8845 Port 1 (DAC)     <=> SWR0 Port 1 (SPKR_L)
-		 * WSA8845 Port 2 (COMP)    <=> SWR0 Port 2 (SPKR_L_COMP)
-		 * WSA8845 Port 3 (BOOST)   <=> SWR0 Port 3 (SPKR_L_BOOST)
-		 * WSA8845 Port 4 (PBR)     <=> SWR0 Port 7 (PBR)
-		 * WSA8845 Port 5 (VISENSE) <=> SWR0 Port 10 (SPKR_L_VI)
-		 * WSA8845 Port 6 (CPS)     <=> SWR0 Port 13 (CPS)
-		 */
-		qcom,port-mapping = <1 2 3 7 10 13>;
-	};
-
-	/* WSA8845, Speaker Right */
-	right_spkr: speaker@0,1 {
-		compatible = "sdw20217020400";
-		reg = <0 1>;
-		pinctrl-0 = <&spkr_2_sd_n_active>;
-		pinctrl-names = "default";
-		powerdown-gpios = <&tlmm 77 GPIO_ACTIVE_LOW>;
-		#sound-dai-cells = <0>;
-		sound-name-prefix = "SpkrRight";
-		vdd-1p8-supply = <&vreg_l15b_1p8>;
-		vdd-io-supply = <&vreg_l3c_1p2>;
-
-		/*
-		 * WSA8845 Port 1 (DAC)     <=> SWR0 Port 4 (SPKR_R)
-		 * WSA8845 Port 2 (COMP)    <=> SWR0 Port 5 (SPKR_R_COMP)
-		 * WSA8845 Port 3 (BOOST)   <=> SWR0 Port 6 (SPKR_R_BOOST)
-		 * WSA8845 Port 4 (PBR)     <=> SWR0 Port 7 (PBR)
-		 * WSA8845 Port 5 (VISENSE) <=> SWR0 Port 11 (SPKR_R_VI)
-		 * WSA8845 Port 6 (CPS)     <=> SWR0 Port 13 (CPS)
-		 */
-		qcom,port-mapping = <4 5 6 7 11 13>;
-	};
-};
-
 &swr1 {
 	status = "okay";
 
@@ -1281,10 +1200,58 @@
 	};
 };
 
+&swr3 {
+	status = "okay";
+
+	pinctrl-0 = <&wsa2_swr_active>, <&spkr_23_sd_n_active>;
+	pinctrl-names = "default";
+
+	/* WSA8845, Speaker Left */
+	left_spkr: speaker@0,0 {
+		compatible = "sdw20217020400"; 
+		reg = <0 0>;
+		#sound-dai-cells = <0>;
+		reset-gpios = <&tlmm 77 GPIO_ACTIVE_LOW>;
+		sound-name-prefix = "SpkrLeft";
+		vdd-1p8-supply = <&vreg_l15b_1p8>;
+		vdd-io-supply = <&vreg_l3c_1p2>;
+
+		/*
+		 * WSA8845 Port 1 (DAC)     <=> SWR3 Port 1 (SPKR_L)
+		 * WSA8845 Port 2 (COMP)    <=> SWR3 Port 2 (SPKR_L_COMP)
+		 * WSA8845 Port 3 (BOOST)   <=> SWR3 Port 3 (SPKR_L_BOOST)
+		 * WSA8845 Port 4 (PBR)     <=> SWR3 Port 7 (PBR)
+		 * WSA8845 Port 5 (VISENSE) <=> SWR3 Port 10 (SPKR_L_VI)
+		 * WSA8845 Port 6 (CPS)     <=> SWR3 Port 13 (CPS)
+		 */
+		qcom,port-mapping = <1 2 3 7 10 13>;
+	};
+
+	/* WSA8845, Speaker Right */
+	right_spkr: speaker@0,1 {
+		compatible = "sdw20217020400";
+		reg = <0 1>;
+		#sound-dai-cells = <0>;
+		reset-gpios = <&tlmm 77 GPIO_ACTIVE_LOW>;
+		sound-name-prefix = "SpkrRight";
+		vdd-1p8-supply = <&vreg_l15b_1p8>;
+		vdd-io-supply = <&vreg_l3c_1p2>;
+
+		/*
+		 * WSA8845 Port 1 (DAC)     <=> SWR3 Port 4 (SPKR_R)
+		 * WSA8845 Port 2 (COMP)    <=> SWR3 Port 5 (SPKR_R_COMP)
+		 * WSA8845 Port 3 (BOOST)   <=> SWR3 Port 6 (SPKR_R_BOOST)
+		 * WSA8845 Port 4 (PBR)     <=> SWR3 Port 7 (PBR)
+		 * WSA8845 Port 5 (VISENSE) <=> SWR3 Port 11 (SPKR_R_VI)
+		 * WSA8845 Port 6 (CPS)     <=> SWR3 Port 13 (CPS)
+		 */
+		qcom,port-mapping = <4 5 6 7 11 13>;
+	};
+};
+
 &tlmm {
 	/* Reserved I/Os for NFC */
-	// gpio-reserved-ranges = <32 8>, <74 1>;
-	gpio-reserved-ranges = <36 1>, <38 6>, <74 1>;
+	gpio-reserved-ranges = <32 4>,  <36 1>, <38 6>, <74 1>;
 
 	bt_default: bt-default-state {
 		bt-en-pins {
@@ -1353,12 +1320,20 @@
 		output-high;
 	};
 
-	spkr_2_sd_n_active: spkr-2-sd-n-active-state {
+	spkr_23_sd_n_active: spkr-23-sd-n-active-state {
 		pins = "gpio77";
 		function = "gpio";
 		drive-strength = <16>;
 		bias-disable;
 		output-low;
+	};
+
+	spkr_01_sd_n_active: spkr-01-sd-n-active-state {
+		pins = "gpio21";
+		function = "gpio";
+		drive-strength = <16>;
+		bias-disable;
+		output-high;
 	};
 
 	ts_irq_default: ts-irq-active-state {
@@ -1432,6 +1407,22 @@
 		output-low;
 	};
 
+	fingerpr_rst_active: fingerpr-rst-active-state {
+		pins = "gpio66", "gpio90";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-disable;
+		output-high;
+	};
+
+	fingerpr_irq_active: fingerpr-irq-active-state {
+		pins = "gpio92";
+		function = "gpio";
+		drive-strength = <2>;
+		bias-pull-down;
+		input-enable;
+	};
+
 	usb_typec_pwr_en: usb-typec-vbus-en-state {
 		pins = "gpio108", "gpio109";
 		function = "gpio";
@@ -1476,7 +1467,7 @@
 };
 
 &uart15 {
-	status = "enabled";
+	status = "okay";
 };
 
 &ufs_mem_hc {
@@ -1487,7 +1478,40 @@
 	vccq-supply = <&vreg_l1c_1p2>;
 	vccq-max-microamp = <1200000>;
 
+	reg = <0 0x01d84000 0 0x3000>,
+			<0 0x1da0000 0 0x15000>;
+	
+	reg-names = "ufs_mem",
+				"mcq";
+
+	msi-parent = <&gic_its 0x60>;
 	status = "okay";
+
+	ufs_opp_table: opp-table {
+		opp-100000000 {
+			opp-hz = /bits/ 64 <100000000>,
+					/bits/ 64 <0>,
+					/bits/ 64 <0>,
+					/bits/ 64 <100000000>,
+					/bits/ 64 <0>,
+					/bits/ 64 <0>,
+					/bits/ 64 <0>,
+					/bits/ 64 <0>;
+			required-opps = <&rpmhpd_opp_low_svs>;
+		};
+
+		opp-403000000 {
+			opp-hz = /bits/ 64 <403000000>,
+					/bits/ 64 <0>,
+					/bits/ 64 <0>,
+					/bits/ 64 <403000000>,
+					/bits/ 64 <0>,
+					/bits/ 64 <0>,
+					/bits/ 64 <0>,
+					/bits/ 64 <0>;
+			required-opps = <&rpmhpd_opp_nom>;
+		};
+	};
 };
 
 &ufs_mem_phy {
@@ -1508,7 +1532,7 @@
 };
 
 &usb_1_dwc3 {
-	// dr_mode = "otg";
+	dr_mode = "otg";
 	usb-role-switch;
 };
 
