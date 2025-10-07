@@ -118,7 +118,7 @@
 
 					pmic_glink_sbu: endpoint {
 						remote-endpoint = <&wcd_usbss_sbu_mux>;
-				    };
+					};
 				};
 			};
 		};
@@ -133,8 +133,10 @@
 						"IN2_HPHR", "HPHR_OUT",
 						"DMIC1", "MIC BIAS1",
 						"DMIC2", "MIC BIAS2",
-						"TX SWR_INPUT4", "DMIC1_OUTPUT",
-						"TX SWR_INPUT5", "DMIC2_OUTPUT";
+						"AMIC2", "MIC BIAS2",
+						"TX SWR_INPUT1", "ADC2_OUTPUT",
+						"TX SWR_INPUT7", "DMIC1_OUTPUT",
+						"TX SWR_INPUT8", "DMIC2_OUTPUT";
 
 		wcd-playback-dai-link {
 			link-name = "WCD Playback";
@@ -217,7 +219,7 @@
 		interrupt-parent = <&tlmm>;
 		interrupts = <92 IRQ_TYPE_EDGE_RISING>;
 		reset-gpios = <&tlmm 90 GPIO_ACTIVE_HIGH>;
-		status = "okay";
+		status = "disabled";
 	};
 
 	wcd939x: audio-codec {
@@ -935,12 +937,6 @@
 	status = "okay";
 };
 
-&mdss_dp0_out {
-	/* 4 lane is broken */
-	/* also seems 2 lane mode does not support 4k output */
-	data-lanes = <0 1>;
-};
-
 &pcie1 {
 	wake-gpios = <&tlmm 99 GPIO_ACTIVE_HIGH>;
 	perst-gpios = <&tlmm 97 GPIO_ACTIVE_LOW>;
@@ -999,6 +995,7 @@
 
 &pon_resin {
 	linux,code = <KEY_VOLUMEDOWN>;
+
 	status = "okay";
 };
 
@@ -1041,13 +1038,13 @@
 
 &pm8550_pwm {
 	status = "okay";
-	#address-cells = <1>;
-	#size-cells = <0>;
+	// #address-cells = <1>;
+	// #size-cells = <0>;
 
 	multi-led {
 		color = <LED_COLOR_ID_RGB>;
 		function = LED_FUNCTION_STATUS;
-		linux,default-trigger = "usbport";
+
 		#address-cells = <1>;
 		#size-cells = <0>;
 
@@ -1471,47 +1468,14 @@
 };
 
 &ufs_mem_hc {
-	dma-coherent;
 	reset-gpios = <&tlmm 210 GPIO_ACTIVE_LOW>;
+
 	vcc-supply = <&vreg_l17b_2p5>;
 	vcc-max-microamp = <1300000>;
 	vccq-supply = <&vreg_l1c_1p2>;
 	vccq-max-microamp = <1200000>;
 
-	reg = <0 0x01d84000 0 0x3000>,
-			<0 0x1da0000 0 0x15000>;
-	
-	reg-names = "ufs_mem",
-				"mcq";
-
-	msi-parent = <&gic_its 0x60>;
 	status = "okay";
-
-	ufs_opp_table: opp-table {
-		opp-100000000 {
-			opp-hz = /bits/ 64 <100000000>,
-					/bits/ 64 <0>,
-					/bits/ 64 <0>,
-					/bits/ 64 <100000000>,
-					/bits/ 64 <0>,
-					/bits/ 64 <0>,
-					/bits/ 64 <0>,
-					/bits/ 64 <0>;
-			required-opps = <&rpmhpd_opp_low_svs>;
-		};
-
-		opp-403000000 {
-			opp-hz = /bits/ 64 <403000000>,
-					/bits/ 64 <0>,
-					/bits/ 64 <0>,
-					/bits/ 64 <403000000>,
-					/bits/ 64 <0>,
-					/bits/ 64 <0>,
-					/bits/ 64 <0>,
-					/bits/ 64 <0>;
-			required-opps = <&rpmhpd_opp_nom>;
-		};
-	};
 };
 
 &ufs_mem_phy {
@@ -1528,12 +1492,10 @@
  */
 
 &usb_1 {
-	status = "okay";
-};
-
-&usb_1_dwc3 {
 	dr_mode = "otg";
 	usb-role-switch;
+
+	status = "okay";
 };
 
 &usb_1_dwc3_hs {
