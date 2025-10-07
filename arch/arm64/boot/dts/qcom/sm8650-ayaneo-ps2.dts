@@ -18,7 +18,6 @@
 
 /delete-node/ &rmtfs_mem;
 /delete-node/ &hwfence_shbuf;
-/delete-node/ &ufs_opp_table;
 
 / {
 	model = "AYANEO Pocket S2 (Pro)";
