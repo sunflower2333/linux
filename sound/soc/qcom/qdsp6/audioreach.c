@@ -730,18 +730,10 @@ static int audioreach_codec_dma_set_media_format(struct q6apm_graph *graph,
 
 	intf_cfg->cfg.lpaif_type = module->hw_interface_type;
 	intf_cfg->cfg.intf_index = module->hw_interface_idx;
-	if (intf_cfg->cfg.lpaif_type == 2 && intf_cfg->cfg.intf_index == 1)
-		intf_cfg->cfg.active_channels_mask = 0xc;
-	else
-		intf_cfg->cfg.active_channels_mask = (1 << cfg->num_channels) - 1;
+	intf_cfg->cfg.active_channels_mask = (1 << cfg->num_channels) - 1;
 	p += ic_sz;
+
 	pm_cfg = p;
-
-	// Print debug logs
-	pr_info("Sending APM command: lpaif_type=%u, intf_index=%u, active_channels_mask=%u\n",
-		 intf_cfg->cfg.lpaif_type, intf_cfg->cfg.intf_index,
-		 intf_cfg->cfg.active_channels_mask);
-
 	param_data = &pm_cfg->param_data;
 	param_data->module_instance_id = module->instance_id;
 	param_data->error_code = 0;
@@ -750,7 +742,6 @@ static int audioreach_codec_dma_set_media_format(struct q6apm_graph *graph,
 	pm_cfg->power_mode.power_mode = 0;
 
 	rc = q6apm_send_cmd_sync(graph->apm, pkt, 0);
-
 
 	kfree(pkt);
 
