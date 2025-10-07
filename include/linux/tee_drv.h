@@ -82,11 +82,6 @@ struct tee_param_memref {
 	struct tee_shm *shm;
 };
 
-struct tee_param_ubuf {
-	void __user *uaddr;
-	size_t size;
-};
-
 struct tee_param_value {
 	u64 a;
 	u64 b;
@@ -97,7 +92,6 @@ struct tee_param {
 	u64 attr;
 	union {
 		struct tee_param_memref memref;
-		struct tee_param_ubuf ubuf;
 		struct tee_param_value value;
 	} u;
 };
