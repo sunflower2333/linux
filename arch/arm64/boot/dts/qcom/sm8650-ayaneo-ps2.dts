@@ -1102,8 +1102,8 @@
 };
 
 &remoteproc_adsp {
-	firmware-name = "qcom/sm8650/ayaneo/ps2/adsp.mdt",
-			"qcom/sm8650/ayaneo/ps2/adsp_dtb.mdt";
+	firmware-name = "qcom/sm8650/ayaneo/ps2/adsp.mbn",
+			"qcom/sm8650/ayaneo/ps2/adsp_dtb.mbn";
 
 	status = "okay";
 };
