@@ -79,6 +79,7 @@ install_maint_scripts () {
 	debhookdir=${KDEB_HOOKDIR:-/etc/kernel /usr/share/kernel}
 	for script in postinst postrm preinst prerm; do
 		mkdir -p "${pdir}/DEBIAN"
+		if [ "${script}" = postinst ]; then
 		cat <<-EOF > "${pdir}/DEBIAN/${script}"
 		#!/bin/sh
 
@@ -99,8 +100,94 @@ install_maint_scripts () {
 		done
 		hookdirs="\${hookdirs# }"
 		test -n "\$hookdirs" && run-parts --arg="${KERNELRELEASE}" --arg="/${installed_image_path}" \$hookdirs
+
+		# After successful installation, update canonical symlinks to point
+		# to the newest installed kernel image and its DTB directory.
+		if [ -d /boot ]; then
+			latest_vmlinuz=\$(ls -1 /boot/vmlinuz-* 2>/dev/null | sort -V | tail -n1 || true)
+			if [ -n "\$latest_vmlinuz" ]; then
+				ln -sf "\$latest_vmlinuz" /boot/vmlinuz || true
+			else
+				[ -L /boot/vmlinuz ] && rm -f /boot/vmlinuz || true
+			fi
+		fi
+
+		latest_image_dir=\$(ls -1d /usr/lib/linux-image-* 2>/dev/null | sort -V | tail -n1 || true)
+		if [ -n "\$latest_image_dir" ] && [ -d "\$latest_image_dir/dtb" ]; then
+			ln -sf "\$latest_image_dir/dtb" /boot/dtb || true
+		else
+			[ -L /boot/dtb ] && rm -f /boot/dtb || true
+		fi
+
 		exit 0
 		EOF
+		elif [ "${script}" = postrm ]; then
+		cat <<-EOF > "${pdir}/DEBIAN/${script}"
+		#!/bin/sh
+
+		set -e
+
+		# Pass maintainer script parameters to hook scripts
+		export DEB_MAINT_PARAMS="\$*"
+
+		# Tell initramfs builder whether it's wanted
+		export INITRD=$(if_enabled_echo CONFIG_BLK_DEV_INITRD Yes No)
+
+		# run-parts will error out if one of its directory arguments does not
+		# exist, so filter the list of hook directories accordingly.
+		hookdirs=
+		for dir in ${debhookdir}; do
+			test -d "\$dir/${script}.d" || continue
+			hookdirs="\$hookdirs \$dir/${script}.d"
+		done
+		hookdirs="\${hookdirs# }"
+		test -n "\$hookdirs" && run-parts --arg="${KERNELRELEASE}" --arg="/${installed_image_path}" \$hookdirs
+
+		# After removal, recompute canonical symlinks so they point to the
+		# newest remaining kernel image (or are removed if none left).
+		if [ -d /boot ]; then
+			latest_vmlinuz=\$(ls -1 /boot/vmlinuz-* 2>/dev/null | sort -V | tail -n1 || true)
+			if [ -n "\$latest_vmlinuz" ]; then
+				ln -sf "\$latest_vmlinuz" /boot/vmlinuz || true
+			else
+				[ -L /boot/vmlinuz ] && rm -f /boot/vmlinuz || true
+			fi
+		fi
+
+		latest_image_dir=\$(ls -1d /usr/lib/linux-image-* 2>/dev/null | sort -V | tail -n1 || true)
+		if [ -n "\$latest_image_dir" ] && [ -d "\$latest_image_dir/dtb" ]; then
+			ln -sf "\$latest_image_dir/dtb" /boot/dtb || true
+		else
+			[ -L /boot/dtb ] && rm -f /boot/dtb || true
+		fi
+
+		exit 0
+		EOF
+		else
+		cat <<-EOF > "${pdir}/DEBIAN/${script}"
+		#!/bin/sh
+
+		set -e
+
+		# Pass maintainer script parameters to hook scripts
+		export DEB_MAINT_PARAMS="\$*"
+
+		# Tell initramfs builder whether it's wanted
+		export INITRD=$(if_enabled_echo CONFIG_BLK_DEV_INITRD Yes No)
+
+		# run-parts will error out if one of its directory arguments does not
+		# exist, so filter the list of hook directories accordingly.
+		hookdirs=
+		for dir in ${debhookdir}; do
+			test -d "\$dir/${script}.d" || continue
+			hookdirs="\$hookdirs \$dir/${script}.d"
+		done
+		hookdirs="\${hookdirs# }"
+		test -n "\$hookdirs" && run-parts --arg="${KERNELRELEASE}" --arg="/${installed_image_path}" \$hookdirs
+
+		exit 0
+		EOF
+		fi
 		chmod 755 "${pdir}/DEBIAN/${script}"
 	done
 }
