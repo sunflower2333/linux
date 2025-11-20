@@ -770,7 +770,7 @@
 &ipa {
 	qcom,gsi-loader = "self";
 	memory-region = <&ipa_fw_mem>;
-	firmware-name = "qcom/sm8550/ayaneo/ipa_fws.mdt";
+	firmware-name = "qcom/sm8550/ayaneo/ipa_fws.mbn";
 	status = "okay";
 };
 
@@ -1074,14 +1074,14 @@
 };
 
 &remoteproc_adsp {
-	firmware-name = "qcom/sm8550/ayaneo/adsp.mdt",
-			"qcom/sm8550/ayaneo/adsp_dtb.mdt";
+	firmware-name = "qcom/sm8550/ayaneo/adsp.mbn",
+			"qcom/sm8550/ayaneo/adsp_dtb.mbn";
 	status = "okay";
 };
 
 &remoteproc_cdsp {
-	firmware-name = "qcom/sm8550/ayaneo/cdsp.mdt",
-			"qcom/sm8550/ayaneo/cdsp_dtb.mdt";
+	firmware-name = "qcom/sm8550/ayaneo/cdsp.mbn",
+			"qcom/sm8550/ayaneo/cdsp_dtb.mbn";
 	status = "okay";
 };
 
