@@ -867,7 +867,6 @@
 		pinctrl-names = "default", "sleep";
 		pinctrl-0 = <&disp0_reset_n_active>;
 		pinctrl-1 = <&disp0_reset_n_suspend>;
-
 		vddio-supply = <&vreg_l12b_1p8>;
 		vci-supply = <&vreg_l13b_3p0>;
 		vdd-supply = <&vreg_l11b_1p2>;
@@ -875,6 +874,7 @@
 
 		reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
 		backlight = <&sy7758_bl>;
+        rotation = <90>;
 
 		ports {
 			#address-cells = <1>;
@@ -928,6 +928,11 @@
 };
 
 &mdss_dp0 {
+	status = "okay";
+};
+
+&mdss_dp0_out {
+    data-lanes = <0 1>;
 	status = "okay";
 };
 
