@@ -860,6 +860,7 @@
 
 		reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
 		backlight = <&sy7758_bl>;
+        rotation = <90>;
 
 		ports {
 			#address-cells = <1>;

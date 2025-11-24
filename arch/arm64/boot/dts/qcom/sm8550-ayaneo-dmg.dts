@@ -832,6 +832,7 @@
 		vddio-supply = <&vreg_l12b_1p8>;
 		avdd-supply = <&sgm3804>;
 		reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
+        rotation = <270>;
 
 		ports {
 			#address-cells = <1>;
