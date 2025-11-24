@@ -933,7 +933,6 @@
 
 &mdss_dp0_out {
     data-lanes = <0 1>;
-	status = "okay";
 };
 
 &pcie0 {
