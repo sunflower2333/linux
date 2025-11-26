@@ -22,9 +22,7 @@ static int sgm3804_enable(struct regulator_dev *rdev)
 {
     struct sgm3804_data *data = rdev_get_drvdata(rdev);
     struct regmap *regmap = data->regmap;
-    int ret;
-
-    pr_info("sgm3804_enable: called\n");
+    int ret = 0;
 
     /* Set reset GPIO high to enable the device if available */
     if (data->reset_gpio[0]) {
@@ -34,25 +32,14 @@ static int sgm3804_enable(struct regulator_dev *rdev)
         gpiod_set_value_cansleep(data->reset_gpio[1], 1);
     }
 
-    ret = regmap_write(regmap, 0x00, 0x0c);
+    ret |= regmap_write(regmap, 0x00, 0x0c);
+    ret |= regmap_write(regmap, 0x01, 0x0c);
+    ret |= regmap_write(regmap, 0x03, 0x03);
     if (ret) {
-        pr_err("sgm3804_enable: regmap_write 0x00 failed: %d\n", ret);
+        dev_err(rdev->dev.parent, "Failed to enable SGM3804 regulator\n");
         return ret;
     }
 
-    ret = regmap_write(regmap, 0x01, 0x0c);
-    if (ret) {
-        pr_err("sgm3804_enable: regmap_write 0x01 failed: %d\n", ret);
-        return ret;
-    }
-
-    ret = regmap_write(regmap, 0x03, 0x03);
-    if (ret) {
-        pr_err("sgm3804_enable: regmap_write 0x03 failed: %d\n", ret);
-        return ret;
-    }
-
-    pr_info("sgm3804_enable: success\n");
     data->enabled = true;
     return 0;
 }
@@ -61,8 +48,6 @@ static int sgm3804_disable(struct regulator_dev *rdev)
 {
     struct sgm3804_data *data = rdev_get_drvdata(rdev);
 
-    pr_info("sgm3804_disable: called\n");
-
     if (data->reset_gpio[0]) {
         gpiod_set_value_cansleep(data->reset_gpio[0], 0);
     }
@@ -70,7 +55,6 @@ static int sgm3804_disable(struct regulator_dev *rdev)
         gpiod_set_value_cansleep(data->reset_gpio[1], 0);
     }
 
-    pr_info("sgm3804_disable: success\n");
     data->enabled = false;
     return 0;
 }
