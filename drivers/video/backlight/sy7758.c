@@ -21,8 +21,6 @@
 #define BL_BRT_L 0x10
 #define BL_BRT_H 0x11
 
-static DEFINE_MUTEX(sy7758_update_backlight_mutex);
-
 struct sy7758 {
 	struct i2c_client *client;
 	struct regmap *regmap;
@@ -47,13 +45,15 @@ static int sy7758_backlight_update_status(struct backlight_device *backlight_dev
 {
 	struct sy7758 *sydev = bl_get_data(backlight_dev);
 	unsigned int brightness = backlight_get_brightness(backlight_dev);
-	mutex_lock(&sy7758_update_backlight_mutex);
+	bool blank = backlight_is_blank(backlight_dev);
 
+	// Init if not already
 	if (!sydev->led_on && brightness > 0) {
-		// Init
 		sy7758_init(sydev);
 		sydev->led_on = true;
-	} else if (brightness == 0) {
+	} else if (blank || brightness == 0) {
+		// Turn off
+		brightness = 0;
 		sydev->led_on = false;
 	}
 
@@ -61,7 +61,6 @@ static int sy7758_backlight_update_status(struct backlight_device *backlight_dev
 	sy7758_write(sydev, BL_BRT_L, brightness & 0xf0);
 	sy7758_write(sydev, BL_BRT_H, (brightness >> 8) & 0xf);
 
-	mutex_unlock(&sy7758_update_backlight_mutex);
 	return 0;
 }
 
@@ -72,6 +71,7 @@ static const struct backlight_ops sy7758_backlight_ops = {
 
 static void sy7758_init(struct sy7758 *sydev)
 {
+	/* Init seq */
 	sy7758_write(sydev, 0x01, 0x85);
 	sy7758_write(sydev, 0x10, 0x00);
 	sy7758_write(sydev, 0x11, 0x00);
@@ -79,18 +79,21 @@ static void sy7758_init(struct sy7758 *sydev)
 	sy7758_write(sydev, 0xa0, 0x55);
 	sy7758_write(sydev, 0xa1, 0x9a);
 	sy7758_write(sydev, 0xa9, 0x80);
+
+	/* Wait for init done, min is 9ms in manual */
+	msleep(18);
+
 	sy7758_write(sydev, 0xa2, 0x28);
-	/* Wait init done */
-	msleep(10);
-	sy7758_write(sydev, 0x10, 0x40);
-	sy7758_write(sydev, 0x11, 0x01);
+	sy7758_write(sydev, 0x10, DEFAULT_BRIGHTNESS & 0xf0);
+	sy7758_write(sydev, 0x11, (DEFAULT_BRIGHTNESS >> 8) & 0xf);
+
 	// Max brightness
 	// 0x10: 0xf0 Low
 	// 0x11: 0x0f High
 
 	// Min brightness
-	// 0x10: 0x10  Low
-	// 0x11: 0x00  High
+	// 0x10: 0x10 Low
+	// 0x11: 0x00 High
 	sydev->led_on = true;
 }
 
