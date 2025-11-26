@@ -731,16 +731,16 @@ static int audioreach_codec_dma_set_media_format(struct q6apm_graph *graph,
 
 	intf_cfg->cfg.lpaif_type = module->hw_interface_type;
 	intf_cfg->cfg.intf_index = module->hw_interface_idx;
-	dev_err(graph->dev, "IDX: 0x%08X, TYPE: 0x%08X", module->hw_interface_idx, module->hw_interface_type);
+	// dev_err(graph->dev, "IDX: 0x%08X, TYPE: 0x%08X", module->hw_interface_idx, module->hw_interface_type);
 
 	if((intf_cfg->cfg.lpaif_type == 7 && cfg->num_channels <= 2 && intf_cfg->cfg.intf_index == 1)
 		|| ((intf_cfg->cfg.intf_index == 1) && (intf_cfg->cfg.lpaif_type == 2) && (cfg->num_channels <= 2) && (last_active_channel_mask>>2 & 0b11) != 0)) // Dedicated WSA2 RX0
 	{
 		intf_cfg->cfg.active_channels_mask = ((1 << cfg->num_channels) - 1) << 2; 
 		last_active_channel_mask = intf_cfg->cfg.active_channels_mask;
-		dev_err(graph->dev, "Setting mask to 0b1100");
-		intf_cfg->cfg.lpaif_type = 2;	// ADSO do not support WSA2 DMA
-		module->hw_interface_type = 2;	// so set lpaif type to WSA after set active channel mask
+		// dev_err(graph->dev, "Setting mask to 0b1100");
+		intf_cfg->cfg.lpaif_type = 2;	// adsp do not support WSA2 DMA
+		module->hw_interface_type = 2;	// need to set lpaif type back to WSA after set active channel mask
 	} else
 		intf_cfg->cfg.active_channels_mask = (1 << cfg->num_channels) - 1;
 
