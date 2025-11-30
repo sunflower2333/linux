@@ -73,19 +73,13 @@ static void sy7758_init(struct sy7758 *sydev)
 {
 	/* Init seq */
 	sy7758_write(sydev, 0x01, 0x85);
-	sy7758_write(sydev, 0x10, 0x00);
-	sy7758_write(sydev, 0x11, 0x00);
+	sy7758_write(sydev, 0x10, DEFAULT_BRIGHTNESS & 0xf0);
+	sy7758_write(sydev, 0x11, (DEFAULT_BRIGHTNESS >> 8) & 0xf);
 	sy7758_write(sydev, 0xa5, 0x64);
 	sy7758_write(sydev, 0xa0, 0x55);
 	sy7758_write(sydev, 0xa1, 0x9a);
 	sy7758_write(sydev, 0xa9, 0x80);
-
-	/* Wait for init done, min is 9ms in manual */
-	msleep(18);
-
 	sy7758_write(sydev, 0xa2, 0x28);
-	sy7758_write(sydev, 0x10, DEFAULT_BRIGHTNESS & 0xf0);
-	sy7758_write(sydev, 0x11, (DEFAULT_BRIGHTNESS >> 8) & 0xf);
 
 	// Max brightness
 	// 0x10: 0xf0 Low
