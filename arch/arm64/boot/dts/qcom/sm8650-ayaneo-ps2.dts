@@ -895,8 +895,8 @@
 		compatible = "ayaneo,wt0630-2k";
 		reg = <0>;
 		pinctrl-names = "default", "sleep";
-		pinctrl-0 = <&disp0_reset_n_active>;
-		pinctrl-1 = <&disp0_reset_n_suspend>;
+		pinctrl-0 = <&disp0_reset_n_active>, <&mdp_vsync_active>;
+		pinctrl-1 = <&disp0_reset_n_suspend>, <&mdp_vsync_suspend>;
 		vddio-supply = <&vreg_l12b_1p8>;
 		vci-supply = <&vreg_l13b_3p0>;
 		vdd-supply = <&vreg_l11b_1p2>;
