@@ -29,48 +29,47 @@
 		serial0 = &uart7;
 		serial1 = &uart14;
 		hsuart0 = &uart11;
-		display0 = &display0;
 	};
 
 	/* Memory and ddr regions are important for booting from ABL */
 	/* We use uefi as bootloader so here is the fallback choice */
-	memory {
-		ddr_device_type = <8>;
-		device_type = "memory";
-		#address-cells = <2>;
-		#size-cells = <2>;
-		reg = <0x0 0x80000000 0x0 0xe00000>,
-			  <0x0 0x811d0000 0x0 0x56e30000>,
-			  <0x0 0xd8140000 0x0 0x20000>,
-			  <0x0 0xddde0000 0x0 0x22220000>,
-			  <0x8 0x80000000 0x0 0x39a00000>,
-			  <0x9 0x80000000 0x1 0x80000000>,
-			  <0x8 0xc0000000 0x0 0xc0000000>;
-	};
+	// memory {
+	// 	ddr_device_type = <8>;
+	// 	device_type = "memory";
+	// 	#address-cells = <2>;
+	// 	#size-cells = <2>;
+	// 	reg = <0x0 0x80000000 0x0 0xe00000>,
+	// 		  <0x0 0x811d0000 0x0 0x56e30000>,
+	// 		  <0x0 0xd8140000 0x0 0x20000>,
+	// 		  <0x0 0xddde0000 0x0 0x22220000>,
+	// 		  <0x8 0x80000000 0x0 0x39a00000>,
+	// 		  <0x9 0x80000000 0x1 0x80000000>,
+	// 		  <0x8 0xc0000000 0x0 0xc0000000>;
+	// };
 
-	ddr-regions {
-		#address-cells = <0x02>;
-		#size-cells = <0x02>;
-		region2 = <0x09 0x80000000 0x01 0x80000000 0x00 0x00 0x00 0x08 0x00 0x400>;
-		region1 = <0x08 0x80000000 0x01 0x00 0x00 0x00 0x00 0x02 0x00 0x400>;
-		region0 = <0x00 0x80000000 0x00 0x80000000 0x00 0x00 0x00 0x00 0x00 0x400>;
-	};
+	// ddr-regions {
+	// 	#address-cells = <0x02>;
+	// 	#size-cells = <0x02>;
+	// 	region2 = <0x09 0x80000000 0x01 0x80000000 0x00 0x00 0x00 0x08 0x00 0x400>;
+	// 	region1 = <0x08 0x80000000 0x01 0x00 0x00 0x00 0x00 0x02 0x00 0x400>;
+	// 	region0 = <0x00 0x80000000 0x00 0x80000000 0x00 0x00 0x00 0x00 0x00 0x400>;
+	// };
 
-	chosen {
-		#address-cells = <2>;
-		#size-cells = <2>;
-		ranges;
-		stdout-path = "display0";
-		display0: framebuffer@b8000000 {
-			compatible = "simple-framebuffer";
-			reg = <0 0xb8000000 0 0x2b00000>;
-			width = <1080>;
-			height = <1240>;
-			stride = <(1080 * 4)>;
-			format = "a8r8g8b8";
-			status = "disabled";
-		};
-	};
+	// chosen {
+	// 	#address-cells = <2>;
+	// 	#size-cells = <2>;
+		// ranges;
+		// stdout-path = "display0";
+		// display0: framebuffer@b8000000 {
+		// 	compatible = "simple-framebuffer";
+		// 	reg = <0 0xb8000000 0 0x2b00000>;
+		// 	width = <1080>;
+		// 	height = <1240>;
+		// 	stride = <(1080 * 4)>;
+		// 	format = "a8r8g8b8";
+		// 	status = "disabled";
+		// };
+	// };
 
 	gpio-keys {
 		compatible = "gpio-keys";
@@ -752,9 +751,8 @@
 
 &gpu {
 	status = "okay";
-	compatible = "qcom,adreno-43050a01", "qcom,adreno";
 	zap-shader {
-		firmware-name = "qcom/sm8550/a740_zap.mbn";
+		firmware-name = "qcom/sm8550/ayaneo/dmg/a740_zap.mbn";
 	};
 };
 
