@@ -2575,6 +2575,14 @@ S:	Maintained
 F:	Documentation/devicetree/bindings/arm/blaize.yaml
 F:	arch/arm64/boot/dts/blaize/
 
+ARM/BST SOC SUPPORT
+M:	Ge Gordon <gordon.ge@bst.ai>
+R:	BST Linux Kernel Upstream Group <bst-upstream@bstai.top>
+L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
+S:	Supported
+F:	Documentation/devicetree/bindings/arm/bst.yaml
+F:	arch/arm64/boot/dts/bst/
+
 ARM/CALXEDA HIGHBANK ARCHITECTURE
 M:	Andre Przywara <andre.przywara@arm.com>
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
@@ -4582,7 +4590,7 @@ F:	drivers/net/ethernet/netronome/nfp/bpf/
 
 BPF JIT for POWERPC (32-BIT AND 64-BIT)
 M:	Hari Bathini <hbathini@linux.ibm.com>
-M:	Christophe Leroy <christophe.leroy@csgroup.eu>
+M:	Christophe Leroy (CS GROUP) <chleroy@kernel.org>
 R:	Naveen N Rao <naveen@kernel.org>
 L:	bpf@vger.kernel.org
 S:	Supported
@@ -10074,7 +10082,7 @@ F:	drivers/spi/spi-fsl-qspi.c
 
 FREESCALE QUICC ENGINE LIBRARY
 M:	Qiang Zhao <qiang.zhao@nxp.com>
-M:	Christophe Leroy <christophe.leroy@csgroup.eu>
+M:	Christophe Leroy (CS GROUP) <chleroy@kernel.org>
 L:	linuxppc-dev@lists.ozlabs.org
 S:	Maintained
 F:	drivers/soc/fsl/qe/
@@ -10127,7 +10135,7 @@ S:	Maintained
 F:	drivers/tty/serial/ucc_uart.c
 
 FREESCALE SOC DRIVERS
-M:	Christophe Leroy <christophe.leroy@csgroup.eu>
+M:	Christophe Leroy (CS GROUP) <chleroy@kernel.org>
 L:	linuxppc-dev@lists.ozlabs.org
 L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
 S:	Maintained
@@ -10671,6 +10679,7 @@ F:	Documentation/devicetree/bindings/clock/google,gs101-clock.yaml
 F:	Documentation/devicetree/bindings/soc/google/google,gs101-pmu-intr-gen.yaml
 F:	arch/arm64/boot/dts/exynos/google/
 F:	drivers/clk/samsung/clk-gs101.c
+F:	drivers/soc/samsung/gs101-pmu.c
 F:	drivers/phy/samsung/phy-gs101-ufs.c
 F:	include/dt-bindings/clock/google,gs101.h
 K:	[gG]oogle.?[tT]ensor
@@ -11604,6 +11613,8 @@ F:	mm/hugetlb.c
 F:	mm/hugetlb_cgroup.c
 F:	mm/hugetlb_cma.c
 F:	mm/hugetlb_cma.h
+F:	mm/hugetlb_sysctl.c
+F:	mm/hugetlb_sysfs.c
 F:	mm/hugetlb_vmemmap.c
 F:	mm/hugetlb_vmemmap.h
 F:	tools/testing/selftests/cgroup/test_hugetlb_memcg.c
@@ -11621,6 +11632,8 @@ M:	Miaohe Lin <linmiaohe@huawei.com>
 R:	Naoya Horiguchi <nao.horiguchi@gmail.com>
 L:	linux-mm@kvack.org
 S:	Maintained
+F:	include/linux/memory-failure.h
+F:	include/trace/events/memory-failure.h
 F:	mm/hwpoison-inject.c
 F:	mm/memory-failure.c
 
@@ -11807,6 +11820,16 @@ F:	include/linux/i2c-smbus.h
 F:	include/linux/i2c.h
 F:	include/uapi/linux/i2c-*.h
 F:	include/uapi/linux/i2c.h
+
+I2C SUBSYSTEM [RUST]
+M:	Igor Korotin <igor.korotin.linux@gmail.com>
+R:	Danilo Krummrich <dakr@kernel.org>
+R:	Daniel Almeida <daniel.almeida@collabora.com>
+L:	rust-for-linux@vger.kernel.org
+S:	Maintained
+F:	rust/kernel/i2c.rs
+F:	samples/rust/rust_driver_i2c.rs
+F:	samples/rust/rust_i2c_client.rs
 
 I2C SUBSYSTEM HOST DRIVERS
 M:	Andi Shyti <andi.shyti@kernel.org>
@@ -14387,7 +14410,7 @@ LINUX FOR POWERPC (32-BIT AND 64-BIT)
 M:	Madhavan Srinivasan <maddy@linux.ibm.com>
 M:	Michael Ellerman <mpe@ellerman.id.au>
 R:	Nicholas Piggin <npiggin@gmail.com>
-R:	Christophe Leroy <christophe.leroy@csgroup.eu>
+R:	Christophe Leroy (CS GROUP) <chleroy@kernel.org>
 L:	linuxppc-dev@lists.ozlabs.org
 S:	Supported
 W:	https://github.com/linuxppc/wiki/wiki
@@ -14443,7 +14466,7 @@ F:	Documentation/devicetree/bindings/powerpc/fsl/
 F:	arch/powerpc/platforms/85xx/
 
 LINUX FOR POWERPC EMBEDDED PPC8XX AND PPC83XX
-M:	Christophe Leroy <christophe.leroy@csgroup.eu>
+M:	Christophe Leroy (CS GROUP) <chleroy@kernel.org>
 L:	linuxppc-dev@lists.ozlabs.org
 S:	Maintained
 F:	arch/powerpc/platforms/8xx/
@@ -14754,6 +14777,7 @@ LOONGSON-2K Board Management Controller (BMC) DRIVER
 M:	Binbin Zhou <zhoubinbin@loongson.cn>
 M:	Chong Qiao <qiaochong@loongson.cn>
 S:	Maintained
+F:	drivers/char/ipmi/ipmi_si_ls2k.c
 F:	drivers/mfd/ls2k-bmc-core.c
 
 LOONGSON EDAC DRIVER
@@ -16346,6 +16370,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/akpm/mm
 F:	include/linux/gfp.h
 F:	include/linux/gfp_types.h
 F:	include/linux/highmem.h
+F:	include/linux/leafops.h
 F:	include/linux/memory.h
 F:	include/linux/mm.h
 F:	include/linux/mm_*.h
@@ -16353,6 +16378,7 @@ F:	include/linux/mmzone.h
 F:	include/linux/mmdebug.h
 F:	include/linux/mmu_notifier.h
 F:	include/linux/pagewalk.h
+F:	include/linux/pgalloc.h
 F:	include/linux/pgtable.h
 F:	include/linux/ptdump.h
 F:	include/linux/vmpressure.h
@@ -21802,8 +21828,12 @@ F:	tools/testing/selftests/rtc/
 
 Real-time Linux Analysis (RTLA) tools
 M:	Steven Rostedt <rostedt@goodmis.org>
+M:	Tomas Glozar <tglozar@redhat.com>
 L:	linux-trace-kernel@vger.kernel.org
+L:	linux-kernel@vger.kernel.org
 S:	Maintained
+Q:	https://patchwork.kernel.org/project/linux-trace-kernel/list/
+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/trace/linux-trace.git
 F:	Documentation/tools/rtla/
 F:	tools/tracing/rtla/
 
@@ -22265,6 +22295,14 @@ F:	Documentation/devicetree/bindings/riscv/andes.yaml
 F:	Documentation/devicetree/bindings/timer/andestech,plmt0.yaml
 F:	arch/riscv/boot/dts/andes/
 
+RISC-V ANLOGIC SoC SUPPORT
+M:	Conor Dooley <conor@kernel.org>
+T:	git https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux.git/
+L:	linux-riscv@lists.infradead.org
+S:	Odd Fixes
+F:	Documentation/devicetree/bindings/riscv/anlogic.yaml
+F:	arch/riscv/boot/dts/anlogic/
+
 RISC-V ARCHITECTURE
 M:	Paul Walmsley <pjw@kernel.org>
 M:	Palmer Dabbelt <palmer@dabbelt.com>
@@ -22289,11 +22327,12 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/iommu/linux.git
 F:	Documentation/devicetree/bindings/iommu/riscv,iommu.yaml
 F:	drivers/iommu/riscv/
 
-RISC-V MICROCHIP FPGA SUPPORT
+RISC-V MICROCHIP SUPPORT
 M:	Conor Dooley <conor.dooley@microchip.com>
 M:	Daire McNamara <daire.mcnamara@microchip.com>
 L:	linux-riscv@lists.infradead.org
 S:	Supported
+T:	git https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux.git/ (dts, soc, firmware)
 F:	Documentation/devicetree/bindings/clock/microchip,mpfs*.yaml
 F:	Documentation/devicetree/bindings/gpio/microchip,mpfs-gpio.yaml
 F:	Documentation/devicetree/bindings/i2c/microchip,corei2c.yaml
@@ -22315,6 +22354,8 @@ F:	drivers/pci/controller/plda/pcie-microchip-host.c
 F:	drivers/pwm/pwm-microchip-core.c
 F:	drivers/reset/reset-mpfs.c
 F:	drivers/rtc/rtc-mpfs.c
+F:	drivers/soc/microchip/mpfs-control-scb.c
+F:	drivers/soc/microchip/mpfs-mss-top-sysreg.c
 F:	drivers/soc/microchip/mpfs-sys-controller.c
 F:	drivers/spi/spi-microchip-core-qspi.c
 F:	drivers/spi/spi-mpfs.c
@@ -22324,13 +22365,10 @@ F:	include/soc/microchip/mpfs.h
 RISC-V MISC SOC SUPPORT
 M:	Conor Dooley <conor@kernel.org>
 L:	linux-riscv@lists.infradead.org
-S:	Maintained
-Q:	https://patchwork.kernel.org/project/linux-riscv/list/
+S:	Odd Fixes
 T:	git https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux.git/
 F:	arch/riscv/boot/dts/canaan/
-F:	arch/riscv/boot/dts/microchip/
 F:	arch/riscv/boot/dts/sifive/
-F:	arch/riscv/boot/dts/starfive/
 
 RISC-V PMU DRIVERS
 M:	Atish Patra <atish.patra@linux.dev>
@@ -22367,6 +22405,15 @@ T:	git https://github.com/spacemit-com/linux
 F:	arch/riscv/boot/dts/spacemit/
 N:	spacemit
 K:	spacemit
+
+RISC-V TENSTORRENT SoC SUPPORT
+M:	Drew Fustini <dfustini@oss.tenstorrent.com>
+M:	Joel Stanley <jms@oss.tenstorrent.com>
+L:	linux-riscv@lists.infradead.org
+S:	Maintained
+T:	git https://github.com/tenstorrent/linux.git
+F:	Documentation/devicetree/bindings/riscv/tenstorrent.yaml
+F:	arch/riscv/boot/dts/tenstorrent/
 
 RISC-V THEAD SoC SUPPORT
 M:	Drew Fustini <fustini@kernel.org>
@@ -22696,6 +22743,7 @@ F:	Documentation/trace/rv/
 F:	include/linux/rv.h
 F:	include/rv/
 F:	kernel/trace/rv/
+F:	tools/testing/selftests/verification/
 F:	tools/verification/
 
 RUST
@@ -23276,6 +23324,7 @@ F:	drivers/scsi/
 F:	drivers/ufs/
 F:	include/scsi/
 F:	include/uapi/scsi/
+F:	include/ufs/
 
 SCSI TAPE DRIVER
 M:	Kai Mäkisara <Kai.Makisara@kolumbus.fi>
@@ -24661,10 +24710,13 @@ F:	drivers/staging/
 
 STANDALONE CACHE CONTROLLER DRIVERS
 M:	Conor Dooley <conor@kernel.org>
+M:	Jonathan Cameron <jonathan.cameron@huawei.com>
 S:	Maintained
 T:	git https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux.git/
 F:	Documentation/devicetree/bindings/cache/
 F:	drivers/cache
+F:	include/linux/cache_coherency.h
+F:	lib/cache_maint.c
 
 STARFIRE/DURALAN NETWORK DRIVER
 M:	Ion Badulescu <ionut@badula.org>
@@ -24689,7 +24741,10 @@ F:	drivers/crypto/starfive/
 
 STARFIVE DEVICETREES
 M:	Emil Renner Berthing <kernel@esmil.dk>
+M:	Conor Dooley <conor@kernel.org>
+L:	linux-riscv@lists.infradead.org
 S:	Maintained
+T:	git https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux.git/
 F:	arch/riscv/boot/dts/starfive/
 
 STARFIVE DWMAC GLUE LAYER
@@ -26585,6 +26640,14 @@ S:	Supported
 F:	Documentation/devicetree/bindings/ufs/
 F:	Documentation/scsi/ufs.rst
 F:	drivers/ufs/core/
+F:	include/ufs/
+
+UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER AMD VERSAL2
+M:	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
+M:	Ajay Neeli <ajay.neeli@amd.com>
+S:	Maintained
+F:	Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
+F:	drivers/ufs/host/ufs-amd-versal2.c
 
 UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER DWC HOOKS
 M:	Pedro Sousa <pedrom.sousa@synopsys.com>
@@ -26602,6 +26665,7 @@ F:	drivers/ufs/host/ufs-exynos*
 
 UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER MEDIATEK HOOKS
 M:	Peter Wang <peter.wang@mediatek.com>
+M:	Chaotian Jing <chaotian.jing@mediatek.com>
 R:	Stanley Jhu <chu.stanley@gmail.com>
 L:	linux-scsi@vger.kernel.org
 L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
