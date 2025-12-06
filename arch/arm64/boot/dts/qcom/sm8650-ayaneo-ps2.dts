@@ -490,8 +490,6 @@
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
-			// regulator-always-on;
-			// regulator-boot-on;
 		};
 
 		vreg_l17b_2p5: ldo17 {
@@ -580,8 +578,6 @@
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
-			// regulator-always-on;
-			// regulator-boot-on;
 		};
 	};
 
