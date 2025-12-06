@@ -22,6 +22,7 @@
 / {
 	model = "AYANEO Pocket S2 (Pro)";
 	compatible = "ayaneo,pocket-s2", "qcom,sm8650";
+	chassis-type = "handset";
 
 	aliases {
 		serial0 = &uart15;
@@ -130,11 +131,16 @@
 						"SpkrRight IN", "WSA_SPK2 OUT",
 						"IN1_HPHL", "HPHL_OUT",
 						"IN2_HPHR", "HPHR_OUT",
-						"VA DMIC0", "vdd-micb",
-						"TX DMIC1", "MIC BIAS1",
+						"AMIC1", "MIC BIAS1",
 						"AMIC2", "MIC BIAS2",
-						"TX SWR_INPUT8", "DMIC1_OUTPUT",
-						"TX SWR_INPUT1", "ADC2_OUTPUT";
+						"AMIC3", "MIC BIAS3",
+						"AMIC4", "MIC BIAS3",
+						"AMIC5", "MIC BIAS4",
+						"TX SWR_INPUT0", "ADC1_OUTPUT",
+						"TX SWR_INPUT1", "ADC2_OUTPUT",
+						"TX SWR_INPUT2", "ADC3_OUTPUT",
+						"TX SWR_INPUT3", "ADC4_OUTPUT",
+						"TX SWR_INPUT8", "DMIC1_OUTPUT";
 
 		wcd-playback-dai-link {
 			link-name = "WCD Playback";
@@ -225,6 +231,16 @@
 		interrupts = <92 IRQ_TYPE_EDGE_RISING>;
 		reset-gpios = <&tlmm 90 GPIO_ACTIVE_HIGH>;
 		status = "disabled";
+	};
+
+	display_3v3_regulator: display-3v3-regulator {
+		compatible = "regulator-fixed";
+		regulator-name = "display_3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		enable-active-high;
+		gpio = <&tlmm 164 GPIO_ACTIVE_HIGH>;
+		status = "okay";
 	};
 
 	wcd939x: audio-codec {
@@ -474,8 +490,8 @@
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
-			regulator-always-on;
-			regulator-boot-on;
+			// regulator-always-on;
+			// regulator-boot-on;
 		};
 
 		vreg_l17b_2p5: ldo17 {
@@ -564,8 +580,8 @@
 			regulator-allow-set-load;
 			regulator-allowed-modes = <RPMH_REGULATOR_MODE_LPM
 						   RPMH_REGULATOR_MODE_HPM>;
-			regulator-always-on;
-			regulator-boot-on;
+			// regulator-always-on;
+			// regulator-boot-on;
 		};
 	};
 
@@ -826,24 +842,27 @@
 
 	/* Screen power */
 	sgm3804: regulator@3e {
-		compatible = "sgmicro,sgm3804";
 		reg = <0x3e>;
-		pinctrl-names = "default";
+		compatible = "sgmicro,sgm3804";
 		pinctrl-0 = <&panel_pwr_active>;
+		pinctrl-1 = <&panel_pwr_sleep>;
+		pinctrl-names = "default", "sleep";
 		regulator-name = "panel-avdd";
 		regulator-min-microvolt = <5000000>;
 		regulator-max-microvolt = <5000000>;
-		reset-gpios = <&tlmm 59 GPIO_ACTIVE_HIGH>,
-					<&tlmm 58 GPIO_ACTIVE_HIGH>,
-					<&tlmm 163 GPIO_ACTIVE_HIGH>,
-					<&tlmm 164 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&tlmm 58 GPIO_ACTIVE_HIGH>,
+					<&tlmm 59 GPIO_ACTIVE_HIGH>;
 		status = "okay";
 	};
 
 	/* Backlight */
 	sy7758_bl: sy7758@2e {
-		compatible = "silergy,sy7758";
 		reg = <0x2e>;
+		compatible = "silergy,sy7758";
+		vdd-supply = <&display_3v3_regulator>;
+		pinctrl-0 = <&backlight_pwr_active>;
+		pinctrl-1 = <&backlight_pwr_sleep>;
+		pinctrl-names = "default", "sleep";
 		status = "okay";
 	};
 };
@@ -871,20 +890,12 @@
 	status = "okay";
 };
 
-&lpass_vamacro {
-	pinctrl-0 = <&dmic01_default>;
-	pinctrl-names = "default";
-
-	vdd-micb-supply = <&vreg_bob1>;
-	qcom,dmic-sample-rate = <4800000>;
-};
-
 &mdss {
-	status = "okay";
+	status = "disabled";
 };
 
 &mdss_dsi0 {
-	status = "okay";
+	status = "disabled";
 	qcom,master-dsi;
 	qcom,dual-dsi-mode;
 	qcom,sync-dual-dsi;
@@ -900,7 +911,7 @@
 		vddio-supply = <&vreg_l12b_1p8>;
 		vci-supply = <&vreg_l13b_3p0>;
 		vdd-supply = <&vreg_l11b_1p2>;
-		avdd-supply = <&sgm3804>;
+		// avdd-supply = <&sgm3804>;
 
 		reset-gpios = <&tlmm 133 GPIO_ACTIVE_LOW>;
 		backlight = <&sy7758_bl>;
@@ -943,7 +954,7 @@
 	qcom,dual-dsi-mode;
 	qcom,sync-dual-dsi;
 	assigned-clock-parents = <&mdss_dsi0_phy DSI_BYTE_PLL_CLK>, <&mdss_dsi0_phy DSI_PIXEL_PLL_CLK>;
-	status = "okay";
+	status = "disabled";
 };
 
 &mdss_dsi1_out {
@@ -1228,7 +1239,7 @@
 
 	pinctrl-0 = <&wsa2_swr_active>, <&spkr_23_sd_n_active>;
 	pinctrl-names = "default";
-
+ 
 	/* WSA8845, Speaker Left */
 	left_spkr: speaker@0,0 {
 		compatible = "sdw20217020400"; 
@@ -1292,11 +1303,31 @@
 	};
 
 	panel_pwr_active: panel-pwr-active-state {
-		pins = "gpio58", "gpio59", "gpio164", "gpio163";
+		pins = "gpio58", "gpio59";
 		function = "gpio";
 		drive-strength = <8>;
-		bias-pull-up;
+		bias-pull-disable;
 		output-high;
+	};
+
+	panel_pwr_sleep: panel-pwr-sleep-state {
+		pins = "gpio58", "gpio59";
+		function = "gpio";
+		output-low;
+	};
+
+	backlight_pwr_active: backlight-pwr-active-state {
+		pins = "gpio163";
+		function = "gpio";
+		drive-strength = <8>;
+		bias-pull-disable;
+		output-high;
+	};
+
+	backlight_pwr_sleep: backlight-pwr-sleep-state {
+		pins = "gpio163";
+		function = "gpio";
+		output-low;
 	};
 
 	disp0_reset_n_active: disp0-reset-n-active-state {
@@ -1552,7 +1583,7 @@
 	clock-frequency = <76800000>;
 };
 
-
+/* Cooling Map for FAN */
 / {
 	thermal-zones {
 		cpu2-top-thermal {
