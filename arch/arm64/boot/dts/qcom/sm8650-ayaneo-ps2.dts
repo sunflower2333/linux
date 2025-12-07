@@ -35,17 +35,6 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
-		display0: framebuffer@b8000000 {
-			compatible = "simple-framebuffer";
-			reg = <0 0xd5100000 0 0x2b00000>;
-			status = "disabled";
-			width = <1440>;
-			height = <2560>;
-			stride = <(1440 * 4)>;
-			format = "a8r8g8b8";
-			clocks = <&gcc GCC_DISP_AHB_CLK>,
-				<&gcc GCC_DISP_HF_AXI_CLK>;
-		};
 	};
 
 	fan0: pwm-fan {
@@ -231,16 +220,6 @@
 		interrupts = <92 IRQ_TYPE_EDGE_RISING>;
 		reset-gpios = <&tlmm 90 GPIO_ACTIVE_HIGH>;
 		status = "disabled";
-	};
-
-	display_3v3_regulator: display-3v3-regulator {
-		compatible = "regulator-fixed";
-		regulator-name = "display_3v3";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-		enable-active-high;
-		gpio = <&tlmm 164 GPIO_ACTIVE_HIGH>;
-		status = "okay";
 	};
 
 	wcd939x: audio-codec {
@@ -855,7 +834,6 @@
 	sy7758_bl: sy7758@2e {
 		reg = <0x2e>;
 		compatible = "silergy,sy7758";
-		vdd-supply = <&display_3v3_regulator>;
 		pinctrl-0 = <&backlight_pwr_active>;
 		pinctrl-1 = <&backlight_pwr_sleep>;
 		pinctrl-names = "default", "sleep";
@@ -887,11 +865,11 @@
 };
 
 &mdss {
-	status = "disabled";
+	status = "okay";
 };
 
 &mdss_dsi0 {
-	status = "disabled";
+	status = "okay";
 	qcom,master-dsi;
 	qcom,dual-dsi-mode;
 	qcom,sync-dual-dsi;
@@ -950,7 +928,7 @@
 	qcom,dual-dsi-mode;
 	qcom,sync-dual-dsi;
 	assigned-clock-parents = <&mdss_dsi0_phy DSI_BYTE_PLL_CLK>, <&mdss_dsi0_phy DSI_PIXEL_PLL_CLK>;
-	status = "disabled";
+	status = "okay";
 };
 
 &mdss_dsi1_out {
@@ -1313,7 +1291,7 @@
 	};
 
 	backlight_pwr_active: backlight-pwr-active-state {
-		pins = "gpio163";
+		pins = "gpio163", "gpio164";
 		function = "gpio";
 		drive-strength = <8>;
 		bias-pull-disable;
@@ -1321,7 +1299,7 @@
 	};
 
 	backlight_pwr_sleep: backlight-pwr-sleep-state {
-		pins = "gpio163";
+		pins = "gpio163", "gpio164";
 		function = "gpio";
 		output-low;
 	};
