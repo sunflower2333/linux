@@ -19,9 +19,18 @@ struct ar02_3inch {
 	struct drm_panel panel;
 	struct mipi_dsi_device *dsi;
 	struct gpio_desc *reset_gpio;
-    struct regulator *avdd;
-    enum drm_panel_orientation orientation;
+	struct regulator_bulk_data *supplies;
+	enum drm_panel_orientation orientation;
 };
+
+static const struct regulator_bulk_data visionox_ar02_3inch_supplies[] = {
+	{ .supply = "vddio" },
+	{ .supply = "vci" },
+	{ .supply = "vdd" },
+	{ .supply = "avdd" },
+};
+
+#define AR02_NUM_SUPPLIES ARRAY_SIZE(visionox_ar02_3inch_supplies)
 
 static inline struct ar02_3inch *to_ar02_3inch(struct drm_panel *panel)
 {
@@ -428,13 +437,13 @@ static int ar02_3inch_prepare(struct drm_panel *panel)
 	struct device *dev = &ctx->dsi->dev;
 	int ret;
 
-	// enable power
-	dev_err(dev, "ar02_3inch_prepare in\n");
-	ret = regulator_enable(ctx->avdd);
+	ret = regulator_bulk_enable(AR02_NUM_SUPPLIES, ctx->supplies);
 	if (ret) {
-		dev_err(panel->dev, "failed to enable avdd regulator: %d\n", ret);
+		dev_err(dev, "failed to enable regulators: %d\n", ret);
 		return ret;
 	}
+
+	dev_err(dev, "ar02_3inch_prepare in\n");
 
 	msleep(20);
 
@@ -443,6 +452,7 @@ static int ar02_3inch_prepare(struct drm_panel *panel)
 	if (ret < 0) {
 		dev_err(dev, "Failed to initialize panel: %d\n", ret);
 		gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+		regulator_bulk_disable(AR02_NUM_SUPPLIES, ctx->supplies);
 		return ret;
 	}
 
@@ -461,6 +471,7 @@ static int ar02_3inch_unprepare(struct drm_panel *panel)
 		dev_err(dev, "Failed to un-initialize panel: %d\n", ret);
 
 	gpiod_set_value_cansleep(ctx->reset_gpio, 1);
+	regulator_bulk_disable(AR02_NUM_SUPPLIES, ctx->supplies);
 
 	return 0;
 }
@@ -486,10 +497,19 @@ static int ar02_3inch_get_modes(struct drm_panel *panel,
 	return drm_connector_helper_get_modes_fixed(connector, &ar02_3inch_mode);
 }
 
+static enum drm_panel_orientation
+ar02_3inch_get_orientation(struct drm_panel *panel)
+{
+	struct ar02_3inch *ctx = to_ar02_3inch(panel);
+
+	return ctx->orientation;
+}
+
 static const struct drm_panel_funcs ar02_3inch_panel_funcs = {
 	.prepare = ar02_3inch_prepare,
 	.unprepare = ar02_3inch_unprepare,
 	.get_modes = ar02_3inch_get_modes,
+	.get_orientation = ar02_3inch_get_orientation,
 };
 
 static int ar02_3inch_bl_update_status(struct backlight_device *bl)
@@ -554,21 +574,21 @@ static int ar02_3inch_probe(struct mipi_dsi_device *dsi)
 	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
 	if (!ctx)
 		return -ENOMEM;
-	
-	dev_err(&dsi->dev, "ar02_3inch_probe in\n");
 
 	/* Get necessary properties */
-	ctx->avdd = devm_regulator_get(dev, "avdd");
-	if (IS_ERR(ctx->avdd))
-		return dev_err_probe(dev, PTR_ERR(ctx->avdd), "failed to get avdd regulator\n");
+	ret = devm_regulator_bulk_get_const(dev, AR02_NUM_SUPPLIES,
+					    visionox_ar02_3inch_supplies,
+					    &ctx->supplies);
+	if (ret)
+		return dev_err_probe(dev, ret, "failed to get regulators\n");
 
 	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio))
 		return dev_err_probe(dev, PTR_ERR(ctx->reset_gpio),
 				     "Failed to get reset-gpios\n");
-    
+
 	/* Orientation */
-    ret = of_drm_get_panel_orientation(dev->of_node, &ctx->orientation);
+	ret = of_drm_get_panel_orientation(dev->of_node, &ctx->orientation);
 	if (ret < 0) {
 		dev_err(dev, "failed to get orientation %d\n", ret);
 		return ret;
@@ -598,8 +618,6 @@ static int ar02_3inch_probe(struct mipi_dsi_device *dsi)
 		drm_panel_remove(&ctx->panel);
 		return dev_err_probe(dev, ret, "Failed to attach to DSI host\n");
 	}
-	
-	dev_err(&dsi->dev, "ar02_3inch_probe out\n");
 
 	return 0;
 }
