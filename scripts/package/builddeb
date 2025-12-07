@@ -101,22 +101,16 @@ install_maint_scripts () {
 		hookdirs="\${hookdirs# }"
 		test -n "\$hookdirs" && run-parts --arg="${KERNELRELEASE}" --arg="/${installed_image_path}" \$hookdirs
 
-		# After successful installation, update canonical symlinks to point
-		# to the newest installed kernel image and its DTB directory.
+		# After successful installation, update symlinks to point
+		# to currently installed kernel image and its DTB directory.
 		if [ -d /boot ]; then
-			latest_vmlinuz=\$(ls -1 /boot/vmlinuz-* 2>/dev/null | sort -V | tail -n1 || true)
-			if [ -n "\$latest_vmlinuz" ]; then
-				ln -sf "\$latest_vmlinuz" /boot/vmlinuz || true
-			else
-				[ -L /boot/vmlinuz ] && rm -f /boot/vmlinuz || true
+			if [ -n "/${installed_image_path}" ]; then
+				ln -sf "/${installed_image_path}" /boot/vmlinuz || true
 			fi
-		fi
-
-		latest_image_dir=\$(ls -1d /usr/lib/linux-image-* 2>/dev/null | sort -V | tail -n1 || true)
-		if [ -n "\$latest_image_dir" ] && [ -d "\$latest_image_dir" ]; then
-			ln -sf "\$latest_image_dir" /boot/dtb || true
-		else
-			[ -L /boot/dtb ] && rm -f /boot/dtb || true
+			linux_dtb_dir="/usr/lib/linux-image-${KERNELRELEASE}"
+			if [ -d "\$linux_dtb_dir" ]; then
+				ln -sfnT "\$linux_dtb_dir" /boot/dtb || true
+			fi
 		fi
 
 		exit 0
@@ -143,22 +137,35 @@ install_maint_scripts () {
 		hookdirs="\${hookdirs# }"
 		test -n "\$hookdirs" && run-parts --arg="${KERNELRELEASE}" --arg="/${installed_image_path}" \$hookdirs
 
-		# After removal, recompute canonical symlinks so they point to the
-		# newest remaining kernel image (or are removed if none left).
-		if [ -d /boot ]; then
-			latest_vmlinuz=\$(ls -1 /boot/vmlinuz-* 2>/dev/null | sort -V | tail -n1 || true)
-			if [ -n "\$latest_vmlinuz" ]; then
-				ln -sf "\$latest_vmlinuz" /boot/vmlinuz || true
-			else
-				[ -L /boot/vmlinuz ] && rm -f /boot/vmlinuz || true
+		# After removal, link vmlinuz and dtb to the newest
+		# remianing kernel (only consider version and subversion, ignore commit hash)
+		# if the current kernel/dtb are linked to this kernel
+		if [ -r /boot/ ]; then
+			if [ -L /boot/vmlinuz ] && [ ! -e /boot/vmlinuz ]; then
+				if [ "\$(readlink -f /boot/vmlinuz)" = "/boot/vmlinuz-${KERNELRELEASE}" ]; then
+					# recreate symbol link
+					newest_image=\$(sh -c 'tmp=\$(mktemp) || exit 1; trap "rm -f \"\$tmp\"" EXIT; for f in /boot/vmlinuz-*; do [ -e "\$f" ] || continue; bn=\${f##*/}; fn=\${bn#vmlinuz-}; ver=\$(printf "%s\n" "\$fn" | sed -n "s/^\([0-9]\+\(\.[0-9]\+\)*\).*/\1/p"); [ -n "\$ver" ] || ver="\$fn"; if printf "%s\n" "\$fn" | grep -q -- "-rc[0-9]\+"; then is_nonrc=0; rcnum=\$(printf "%s\n" "\$fn" | sed -n "s/.*-rc\([0-9]\+\).*/\1/p"); else is_nonrc=1; rcnum=0; fi; printf "%s|%d|%d|%s\n" "\$ver" "\$is_nonrc" "\$rcnum" "\$f" >> "\$tmp"; done; [ -s "\$tmp" ] || exit 0; sort -t"|" -k1,1V -k2,2n -k3,3n "\$tmp" | tail -n1 | cut -d"|" -f4-')
+					if [ -n \$newest_image ]; then
+						ln -sf \$newest_image /boot/vmlinuz
+					else
+						# Can not find a image (kernel may not boot after reboot)
+						rm /boot/vmlinuz
+					fi
+				fi
 			fi
-		fi
-
-		latest_image_dir=\$(ls -1d /usr/lib/linux-image-* 2>/dev/null | sort -V | tail -n1 || true)
-		if [ -n "\$latest_image_dir" ] && [ -d "\$latest_image_dir/dtb" ]; then
-			ln -sf "\$latest_image_dir/dtb" /boot/dtb || true
-		else
-			[ -L /boot/dtb ] && rm -f /boot/dtb || true
+			
+			if [ -L /boot/dtb ] && [ ! -e /boot/dtb ]; then
+				if [ "\$(readlink -f /boot/dtb)" = "/usr/lib/linux-image-${KERNELRELEASE}" ]; then
+					# recreate symbol link
+					newest_dtb=\$(sh -c 'tmp=\$(mktemp) || exit 1; trap "rm -f \"\$tmp\"" EXIT; for f in /usr/lib/linux-image-*; do [ -e "\$f" ] || continue; bn=\${f##*/}; fn=\${bn#vmlinuz-}; ver=\$(printf "%s\n" "\$fn" | sed -n "s/^\([0-9]\+\(\.[0-9]\+\)*\).*/\1/p"); [ -n "\$ver" ] || ver="\$fn"; if printf "%s\n" "\$fn" | grep -q -- "-rc[0-9]\+"; then is_nonrc=0; rcnum=\$(printf "%s\n" "\$fn" | sed -n "s/.*-rc\([0-9]\+\).*/\1/p"); else is_nonrc=1; rcnum=0; fi; printf "%s|%d|%d|%s\n" "\$ver" "\$is_nonrc" "\$rcnum" "\$f" >> "\$tmp"; done; [ -s "\$tmp" ] || exit 0; sort -t"|" -k1,1V -k2,2n -k3,3n "\$tmp" | tail -n1 | cut -d"|" -f4-')
+					if [ -n \$newest_dtb ]; then
+						ln -sf \$newest_dtb /boot/dtb
+					else
+						# Can not find dtb (kernel may not boot after reboot)
+						rm /boot/dtb
+					fi
+				fi
+			fi
 		fi
 
 		exit 0
