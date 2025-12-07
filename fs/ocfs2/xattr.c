@@ -2908,7 +2908,7 @@ static int ocfs2_create_xattr_block(struct inode *inode,
 	/* Initialize ocfs2_xattr_block */
 	xblk = (struct ocfs2_xattr_block *)new_bh->b_data;
 	memset(xblk, 0, inode->i_sb->s_blocksize);
-	strcpy((void *)xblk, OCFS2_XATTR_BLOCK_SIGNATURE);
+	strscpy(xblk->xb_signature, OCFS2_XATTR_BLOCK_SIGNATURE);
 	xblk->xb_suballoc_slot = cpu_to_le16(ctxt->meta_ac->ac_alloc_slot);
 	xblk->xb_suballoc_loc = cpu_to_le64(suballoc_loc);
 	xblk->xb_suballoc_bit = cpu_to_le16(suballoc_bit_start);
@@ -6351,7 +6351,7 @@ static int ocfs2_reflink_xattr_header(handle_t *handle,
 	trace_ocfs2_reflink_xattr_header((unsigned long long)old_bh->b_blocknr,
 					 le16_to_cpu(xh->xh_count));
 
-	last = &new_xh->xh_entries[le16_to_cpu(new_xh->xh_count)];
+	last = &new_xh->xh_entries[le16_to_cpu(new_xh->xh_count)] - 1;
 	for (i = 0, j = 0; i < le16_to_cpu(xh->xh_count); i++, j++) {
 		xe = &xh->xh_entries[i];
 
