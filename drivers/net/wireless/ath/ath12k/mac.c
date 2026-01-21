@@ -4865,15 +4865,10 @@ int ath12k_mac_get_fw_stats(struct ath12k *ar,
 	 * still there could be more events following. Below is to wait
 	 * until firmware completes sending all the events.
 	 */
-	for (;;) {
-		if (time_after(jiffies, timeout))
-			break;
-		spin_lock_bh(&ar->data_lock);
-		if (ar->fw_stats.fw_stats_done) {
-			spin_unlock_bh(&ar->data_lock);
-			break;
-		}
-		spin_unlock_bh(&ar->data_lock);
+	time_left = wait_for_completion_timeout(&ar->fw_stats_done, 3 * HZ);
+	if (!time_left) {
+		ath12k_warn(ab, "time out while waiting for fw stats done\n");
+		return -ETIMEDOUT;
 	}
 
 	return 0;
