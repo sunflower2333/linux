@@ -751,7 +751,6 @@ static int audioreach_codec_dma_set_media_format(struct q6apm_graph *graph,
 		last_active_channel_mask = intf_cfg->cfg.active_channels_mask;
 		// dev_err(graph->dev, "Setting mask to 0b1100");
 		intf_cfg->cfg.lpaif_type = 2;	// adsp do not support WSA2 DMA
-		module->hw_interface_type = 2;	// need to set lpaif type back to WSA after set active channel mask
 	} else
 		intf_cfg->cfg.active_channels_mask = (1 << cfg->num_channels) - 1;
 
