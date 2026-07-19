@@ -220,9 +220,11 @@ static int wt0600_probe(struct mipi_dsi_device *dsi)
 	struct mipi_dsi_host *dsi1_host;
 	int ret, i;
 
-	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
-	if (!ctx)
-		return -ENOMEM;
+	ctx = devm_drm_panel_alloc(dev, struct wt0600_panel, panel,
+				   &wt0600_panel_funcs,
+				   DRM_MODE_CONNECTOR_DSI);
+	if (IS_ERR(ctx))
+		return PTR_ERR(ctx);
 
 	ctx->desc = of_device_get_match_data(dev);
 	if (!ctx->desc)
@@ -269,15 +271,15 @@ static int wt0600_probe(struct mipi_dsi_device *dsi)
 	ctx->dsi[0] = dsi;
 	mipi_dsi_set_drvdata(dsi, ctx);
 
-	drm_panel_init(&ctx->panel, dev, &wt0600_panel_funcs,
-		       DRM_MODE_CONNECTOR_DSI);
 	ctx->panel.prepare_prev_first = true;
 
 	ret = drm_panel_of_backlight(&ctx->panel);
 	if (ret)
 		return dev_err_probe(dev, ret, "Failed to get backlight\n");
 
-	drm_panel_add(&ctx->panel);
+	ret = devm_drm_panel_add(dev, &ctx->panel);
+	if (ret)
+		return ret;
 
 	/* Configure and attach both DSI devices */
 	for (i = 0; i < ARRAY_SIZE(ctx->dsi); i++) {
@@ -286,12 +288,10 @@ static int wt0600_probe(struct mipi_dsi_device *dsi)
 		ctx->dsi[i]->mode_flags = ctx->desc->mode_flags;
 
 		ret = mipi_dsi_attach(ctx->dsi[i]);
-		if (ret < 0) {
-			drm_panel_remove(&ctx->panel);
+		if (ret < 0)
 			return dev_err_probe(dev, ret,
 					     "Failed to attach DSI device %d\n",
 					     i);
-		}
 	}
 
 	return 0;
@@ -305,7 +305,6 @@ static void wt0600_remove(struct mipi_dsi_device *dsi)
 	for (i = 0; i < ARRAY_SIZE(ctx->dsi); i++)
 		mipi_dsi_detach(ctx->dsi[i]);
 
-	drm_panel_remove(&ctx->panel);
 }
 
 static const struct of_device_id wt0600_of_match[] = {

@@ -422,9 +422,11 @@ static int sw43103_a3_dsc_probe(struct mipi_dsi_device *dsi)
 	struct sw43103_a3_dsc *ctx;
 	int ret;
 
-	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
-	if (!ctx)
-		return -ENOMEM;
+	ctx = devm_drm_panel_alloc(dev, struct sw43103_a3_dsc, panel,
+				   &sw43103_a3_dsc_panel_funcs,
+				   DRM_MODE_CONNECTOR_DSI);
+	if (IS_ERR(ctx))
+		return PTR_ERR(ctx);
 
 	ctx->reset_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->reset_gpio))
@@ -439,8 +441,6 @@ static int sw43103_a3_dsc_probe(struct mipi_dsi_device *dsi)
 	dsi->mode_flags = MIPI_DSI_MODE_VIDEO_BURST |
 			  MIPI_DSI_CLOCK_NON_CONTINUOUS | MIPI_DSI_MODE_LPM;
 
-	drm_panel_init(&ctx->panel, dev, &sw43103_a3_dsc_panel_funcs,
-		       DRM_MODE_CONNECTOR_DSI);
 	ctx->panel.prepare_prev_first = true;
 
 	ctx->panel.backlight = sw43103_a3_dsc_create_backlight(dsi);
@@ -448,7 +448,9 @@ static int sw43103_a3_dsc_probe(struct mipi_dsi_device *dsi)
 		return dev_err_probe(dev, PTR_ERR(ctx->panel.backlight),
 				     "Failed to create backlight\n");
 
-	drm_panel_add(&ctx->panel);
+	ret = devm_drm_panel_add(dev, &ctx->panel);
+	if (ret)
+		return ret;
 
 	/* This panel only supports DSC; unconditionally enable it */
 	dsi->dsc = &ctx->dsc;
@@ -470,24 +472,20 @@ static int sw43103_a3_dsc_probe(struct mipi_dsi_device *dsi)
 	ctx->dsc.block_pred_enable = true;
 
 	ret = mipi_dsi_attach(dsi);
-	if (ret < 0) {
-		drm_panel_remove(&ctx->panel);
+	if (ret < 0)
 		return dev_err_probe(dev, ret, "Failed to attach to DSI host\n");
-	}
 
 	return 0;
 }
 
 static void sw43103_a3_dsc_remove(struct mipi_dsi_device *dsi)
 {
-	struct sw43103_a3_dsc *ctx = mipi_dsi_get_drvdata(dsi);
 	int ret;
 
 	ret = mipi_dsi_detach(dsi);
 	if (ret < 0)
 		dev_err(&dsi->dev, "Failed to detach from DSI host: %d\n", ret);
 
-	drm_panel_remove(&ctx->panel);
 }
 
 static const struct of_device_id sw43103_a3_dsc_of_match[] = {

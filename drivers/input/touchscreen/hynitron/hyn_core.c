@@ -35,6 +35,7 @@ static int hyn_parse_dt(struct hyn_ts_data *ts_data)
     int ret = 0;
     struct device *dev = ts_data->dev;
     struct hyn_plat_data* dt = &ts_data->plat_data;
+    struct gpio_desc *gpio;
     HYN_ENTER();
     if(dev->of_node){
         u32 buf[8];
@@ -63,8 +64,15 @@ static int hyn_parse_dt(struct hyn_ts_data *ts_data)
             HYN_INFO("vdd_i2c not config");
         }
 
-        dt->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
-        dt->irq_gpio = of_get_named_gpio(np, "irq-gpio", 0);
+        gpio = devm_gpiod_get(dev, "reset", GPIOD_ASIS);
+        if (IS_ERR(gpio))
+            return dev_err_probe(dev, PTR_ERR(gpio), "failed to get reset GPIO\n");
+        dt->reset_gpio = desc_to_gpio(gpio);
+
+        gpio = devm_gpiod_get(dev, "irq", GPIOD_ASIS);
+        if (IS_ERR(gpio))
+            return dev_err_probe(dev, PTR_ERR(gpio), "failed to get IRQ GPIO\n");
+        dt->irq_gpio = desc_to_gpio(gpio);
         if(dt->reset_gpio < 0 || dt->irq_gpio < 0){
             HYN_ERROR("dts get gpio failed");
             return -ENODEV;

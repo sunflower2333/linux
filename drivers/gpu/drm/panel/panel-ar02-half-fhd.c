@@ -571,9 +571,11 @@ static int ar02_3inch_probe(struct mipi_dsi_device *dsi)
 	struct ar02_3inch *ctx;
 	int ret;
 
-	ctx = devm_kzalloc(dev, sizeof(*ctx), GFP_KERNEL);
-	if (!ctx)
-		return -ENOMEM;
+	ctx = devm_drm_panel_alloc(dev, struct ar02_3inch, panel,
+				   &ar02_3inch_panel_funcs,
+				   DRM_MODE_CONNECTOR_DSI);
+	if (IS_ERR(ctx))
+		return PTR_ERR(ctx);
 
 	/* Get necessary properties */
 	ret = devm_regulator_bulk_get_const(dev, AR02_NUM_SUPPLIES,
@@ -602,8 +604,6 @@ static int ar02_3inch_probe(struct mipi_dsi_device *dsi)
 	dsi->mode_flags = MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST |
 			  MIPI_DSI_CLOCK_NON_CONTINUOUS;
 
-	drm_panel_init(&ctx->panel, dev, &ar02_3inch_panel_funcs,
-		       DRM_MODE_CONNECTOR_DSI);
 	ctx->panel.prepare_prev_first = true;
 
 	ctx->panel.backlight = ar02_3inch_create_backlight(dsi);
@@ -611,27 +611,25 @@ static int ar02_3inch_probe(struct mipi_dsi_device *dsi)
 		return dev_err_probe(dev, PTR_ERR(ctx->panel.backlight),
 				     "Failed to create backlight\n");
 
-	drm_panel_add(&ctx->panel);
+	ret = devm_drm_panel_add(dev, &ctx->panel);
+	if (ret)
+		return ret;
 
 	ret = mipi_dsi_attach(dsi);
-	if (ret < 0) {
-		drm_panel_remove(&ctx->panel);
+	if (ret < 0)
 		return dev_err_probe(dev, ret, "Failed to attach to DSI host\n");
-	}
 
 	return 0;
 }
 
 static void ar02_3inch_remove(struct mipi_dsi_device *dsi)
 {
-	struct ar02_3inch *ctx = mipi_dsi_get_drvdata(dsi);
 	int ret;
 
 	ret = mipi_dsi_detach(dsi);
 	if (ret < 0)
 		dev_err(&dsi->dev, "Failed to detach from DSI host: %d\n", ret);
 
-	drm_panel_remove(&ctx->panel);
 }
 
 static const struct of_device_id ar02_3inch_of_match[] = {

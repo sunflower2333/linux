@@ -23,7 +23,7 @@
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
 #include <linux/of.h>
-#include <linux/of_gpio.h>
+#include <linux/gpio/consumer.h>
 #include <linux/delay.h>
 #include <linux/regulator/consumer.h>
 #include <linux/pinctrl/consumer.h>
