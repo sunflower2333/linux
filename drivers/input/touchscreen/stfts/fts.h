@@ -31,6 +31,7 @@
 #ifndef _LINUX_FTS_I2C_H_
 #define _LINUX_FTS_I2C_H_
 
+#include <linux/gpio/consumer.h>
 #include <linux/workqueue.h>
 #include <linux/sysfs.h>
 #include <linux/notifier.h>
@@ -175,8 +176,8 @@ struct fts_config_info {
 
 struct fts_hw_platform_data {
 	int (*power) (bool on);
-	int irq_gpio;
-	int reset_gpio;
+	struct gpio_desc *irq_gpio;
+	struct gpio_desc *reset_gpio;
 	unsigned long irq_flags;
 	unsigned int x_max;
 	unsigned int y_max;

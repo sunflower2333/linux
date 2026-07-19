@@ -49,8 +49,7 @@
 #include <linux/hardirq.h>
 #endif
 
-#include <linux/gpio.h>
-#include <linux/of_gpio.h>
+#include <linux/gpio/consumer.h>
 #include <linux/regulator/consumer.h>
 
 #include <linux/notifier.h>
@@ -225,8 +224,11 @@ static ssize_t fts_fwupdate_store(struct device *dev,
 	mode[1] = 1;
 
 	/* reading out firmware upgrade parameters */
-	sscanf(buf, "%100s %d %d", path, &mode[0], &mode[1]);
-	logError(1, "%s fts_fwupdate_store: mode = %s \n", tag, path);
+	ret = sscanf(buf, "%99s %d %d", path, &mode[0], &mode[1]);
+	if (ret < 1)
+		return -EINVAL;
+
+	logError(1, "%s %s: mode = %s\n", tag, __func__, path);
 
 	ret = flashProcedure(path, mode[0], mode[1]);
 
@@ -3147,11 +3149,14 @@ static void fts_enter_pointer_event_handler(struct fts_ts_info *info,
 			__set_bit(touchId, &info->stylus_id);
 			break;
 		}
+		fallthrough;
 #endif
 	case TOUCH_TYPE_FINGER:
 		/*logError(0, "%s  %s : It is a finger!\n",tag,__func__); */
+		fallthrough;
 	case TOUCH_TYPE_GLOVE:
 		/*logError(0, "%s  %s : It is a glove!\n",tag,__func__); */
+		fallthrough;
 	case TOUCH_TYPE_PALM:
 		/*logError(0, "%s  %s : It is a palm!\n",tag,__func__); */
 		tool = MT_TOOL_FINGER;
@@ -3183,11 +3188,11 @@ static void fts_enter_pointer_event_handler(struct fts_ts_info *info,
 		input_report_key(info->input_dev, BTN_TOOL_FINGER, 1);
 
 	/*input_report_abs(info->input_dev, ABS_MT_TRACKING_ID, touchId); */
-		input_report_abs(info->input_dev, ABS_MT_POSITION_X, x);
-		input_report_abs(info->input_dev, ABS_MT_POSITION_Y, y);
-		input_report_abs(info->input_dev, ABS_MT_TOUCH_MINOR, z);
-		input_report_abs(info->input_dev, ABS_MT_DISTANCE, distance);
-		input_report_abs(info->input_dev, ABS_MT_TOUCH_MAJOR, area_size);
+	input_report_abs(info->input_dev, ABS_MT_POSITION_X, x);
+	input_report_abs(info->input_dev, ABS_MT_POSITION_Y, y);
+	input_report_abs(info->input_dev, ABS_MT_TOUCH_MINOR, z);
+	input_report_abs(info->input_dev, ABS_MT_DISTANCE, distance);
+	input_report_abs(info->input_dev, ABS_MT_TOUCH_MAJOR, area_size);
 #ifdef CONFIG_FTS_FOD_AREA_REPORT
 		if (fts_is_in_fodarea(x, y) && !(info->fod_id & ~(1 << touchId))) {
 			__set_bit(touchId, &info->sleep_finger);
@@ -3282,12 +3287,15 @@ static void fts_leave_pointer_event_handler(struct fts_ts_info *info,
 			__clear_bit(touchId, &info->stylus_id);
 			break;
 		}
+		fallthrough;
 #endif
 
 	case TOUCH_TYPE_FINGER:
 		/*logError(0, "%s  %s : It is a finger!\n",tag,__func__); */
+		fallthrough;
 	case TOUCH_TYPE_GLOVE:
 		/*logError(0, "%s  %s : It is a glove!\n",tag,__func__); */
+		fallthrough;
 	case TOUCH_TYPE_PALM:
 		/*logError(0, "%s  %s : It is a palm!\n",tag,__func__); */
 		tool = MT_TOOL_FINGER;
@@ -4497,8 +4505,8 @@ int fts_chip_powercycle(struct fts_ts_info *info)
 		}
 	}
 
-	if (info->board->reset_gpio != GPIO_NOT_DEFINED)
-		gpio_set_value(info->board->reset_gpio, 0);
+	if (info->board->reset_gpio)
+		gpiod_set_raw_value_cansleep(info->board->reset_gpio, 0);
 	else
 		mdelay(300);
 
@@ -4522,9 +4530,9 @@ int fts_chip_powercycle(struct fts_ts_info *info)
 
 	mdelay(5);
 
-	if (info->board->reset_gpio != GPIO_NOT_DEFINED) {
+	if (info->board->reset_gpio) {
 		mdelay(10);
-		gpio_set_value(info->board->reset_gpio, 1);
+		gpiod_set_raw_value_cansleep(info->board->reset_gpio, 1);
 	}
 
 	release_all_touches(info);
@@ -5019,37 +5027,6 @@ exit:
  * @param state initial value (if the direction is in, this parameter is ignored)
  * return error code
  */
-static int fts_gpio_setup(int gpio, bool config, int dir, int state)
-{
-	int retval = 0;
-	unsigned char buf[16];
-
-	if (config) {
-		snprintf(buf, 16, "fts_gpio_%u\n", gpio);
-
-		retval = gpio_request(gpio, buf);
-		if (retval) {
-			logError(1, "%s %s: Failed to get gpio %d (code: %d)",
-				 tag, __func__, gpio, retval);
-			return retval;
-		}
-
-		if (dir == 0)
-			retval = gpio_direction_input(gpio);
-		else
-			retval = gpio_direction_output(gpio, state);
-		if (retval) {
-			logError(1, "%s %s: Failed to set gpio %d direction",
-				 tag, __func__, gpio);
-			return retval;
-		}
-	} else {
-		gpio_free(gpio);
-	}
-
-	return retval;
-}
-
 /**
  * Setup the IRQ and RESET (if present) gpios.
  * If the Reset Gpio is present it will perform a cycle HIGH-LOW-HIGH in order to assure that the IC has been reset properly
@@ -5059,32 +5036,30 @@ static int fts_set_gpio(struct fts_ts_info *info)
 	int retval;
 	struct fts_hw_platform_data *bdata = info->board;
 
-	retval = fts_gpio_setup(bdata->irq_gpio, true, 0, 0);
+	retval = gpiod_direction_input(bdata->irq_gpio);
 	if (retval < 0) {
 		logError(1, "%s %s: Failed to configure irq GPIO\n", tag,
 			 __func__);
 		goto err_gpio_irq;
 	}
 
-	if (bdata->reset_gpio >= 0) {
-		retval = fts_gpio_setup(bdata->reset_gpio, true, 1, 0);
+	if (bdata->reset_gpio) {
+		retval = gpiod_direction_output_raw(bdata->reset_gpio, 0);
 		if (retval < 0) {
 			logError(1, "%s %s: Failed to configure reset GPIO\n",
 				 tag, __func__);
 			goto err_gpio_reset;
 		}
 	}
-	if (bdata->reset_gpio >= 0) {
-		gpio_set_value(bdata->reset_gpio, 0);
+	if (bdata->reset_gpio) {
+		gpiod_set_raw_value_cansleep(bdata->reset_gpio, 0);
 		mdelay(10);
-		gpio_set_value(bdata->reset_gpio, 1);
+		gpiod_set_raw_value_cansleep(bdata->reset_gpio, 1);
 	}
 
 	return OK;
 
 err_gpio_reset:
-	fts_gpio_setup(bdata->irq_gpio, false, 0, 0);
-	bdata->reset_gpio = GPIO_NOT_DEFINED;
 err_gpio_irq:
 	return retval;
 }
@@ -5142,9 +5117,11 @@ static int parse_dt(struct device *dev, struct fts_hw_platform_data *bdata)
 	struct fts_config_info *config_info;
 	u32 temp_val;
 
-	bdata->irq_gpio = of_get_named_gpio(np, "fts,irq-gpio", 0);
+	bdata->irq_gpio = devm_gpiod_get(dev, "fts,irq", GPIOD_IN);
+	if (IS_ERR(bdata->irq_gpio))
+		return PTR_ERR(bdata->irq_gpio);
 
-	logError(0, "%s irq_gpio = %d\n", tag, bdata->irq_gpio);
+	logError(0, "%s irq_gpio = %p\n", tag, bdata->irq_gpio);
 
 	retval = of_property_read_string(np, "fts,pwr-reg-name", &name);
 	if (retval == -EINVAL)
@@ -5167,12 +5144,14 @@ static int parse_dt(struct device *dev, struct fts_hw_platform_data *bdata)
 	}
 
 	if (of_property_read_bool(np, "fts,reset-gpio-enable")) {
-		bdata->reset_gpio = of_get_named_gpio(np,
-							    "fts,reset-gpio", 0);
+		bdata->reset_gpio = devm_gpiod_get(dev, "fts,reset",
+						  GPIOD_ASIS);
+		if (IS_ERR(bdata->reset_gpio))
+			return PTR_ERR(bdata->reset_gpio);
 
-		logError(0, "%s reset_gpio =%d\n", tag, bdata->reset_gpio);
+		logError(0, "%s reset_gpio = %p\n", tag, bdata->reset_gpio);
 	} else {
-		bdata->reset_gpio = GPIO_NOT_DEFINED;
+		bdata->reset_gpio = NULL;
 	}
 
 	retval = of_property_read_u32(np, "fts,irq-flags", &temp_val);
@@ -6024,7 +6003,7 @@ static int fts_probe(struct spi_device *client)
 		dev_err(&client->dev, "%s: Failed to init pinctrl\n", __func__);
 	}
 
-	info->client->irq = gpio_to_irq(info->board->irq_gpio);
+	info->client->irq = gpiod_to_irq(info->board->irq_gpio);
 
 	logError(0, "%s SET Event Handler: \n", tag);
 

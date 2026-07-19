@@ -28,7 +28,6 @@
 #include <linux/stdarg.h>
 #include <linux/delay.h>
 #include <linux/ctype.h>
-#include <linux/of_gpio.h>
 
 #ifdef I2C_INTERFACE
 #include <linux/i2c.h>

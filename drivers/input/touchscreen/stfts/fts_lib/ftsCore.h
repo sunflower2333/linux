@@ -21,13 +21,13 @@
 #ifndef FTS_CORE_H
 #define FTS_CORE_H
 
+#include <linux/gpio/consumer.h>
+
 #include "ftsHardware.h"
 #include "ftsSoftware.h"
 #include "../fts.h"
 
 /*HW DATA*/
-#define GPIO_NOT_DEFINED					-1									/*value assumed by reset_gpio when the reset pin of the IC is not connected*/
-
 #define ADDR_SIZE_HW_REG					BITS_32							/*value of AddrSize for Hw register in FTI @see AddrSize*/
 
 #define DATA_HEADER							4								/*size in byte of the header loaded with the data in the frambuffer*/
@@ -153,7 +153,7 @@ typedef struct {
 /** @}*/
 
 int initCore(struct fts_ts_info *info);
-void setResetGpio(int gpio);
+void setResetGpio(struct gpio_desc *gpio);
 int fts_system_reset(void);
 int isSystemResettedUp(void);
 int isSystemResettedDown(void);
@@ -173,6 +173,7 @@ int fts_resetDisableIrqCount(void);
 int fts_enableInterrupt(void);
 int fts_crc_check(void);
 int requestSyncFrame(u8 type);
+int calculateCRC8(u8 *u8_srcBuff, int size, u8 *crc);
 int fts_get_lockdown_info(u8 *lockData, struct fts_ts_info *info);
 int writeLockDownInfo(u8 *data, int size, u8 lock_id);
 int readLockDownInfo(u8 *lockData, u8 lock_id, int size);

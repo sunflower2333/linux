@@ -58,8 +58,7 @@ int initTestToDo(void)
 	/*** Initialize Limit File ***/
 	limit_file.size = 0;
 	limit_file.data = NULL;
-	strncpy(limit_file.name, " ", MAX_LIMIT_FILE_NAME -1);
-	limit_file.name[MAX_LIMIT_FILE_NAME - 1] = '\0';
+	strscpy(limit_file.name, " ", sizeof(limit_file.name));
 	tests.SelfHoverForceRaw=1;		/* /< SS Hover Force Raw min/Max test */
 	tests.SelfHoverSenceRaw=1;		/* /< SS Hover Sence Raw min/Max test */
 	tests.SelfHoverForceIxTotal=1;	/* /< SS Hover Total Force Ix min/Max (for each node)* test */
@@ -2456,7 +2455,6 @@ int production_test_ms_key_cx(char *path_limits, int stop_on_fail,
 {
 	int ret;
 	int count_fail = 0;
-	int num_keys = 0;
 	int *thresholds = NULL;
 	int *thresholds_min = NULL;
 	int *thresholds_max = NULL;
@@ -2472,12 +2470,6 @@ int production_test_ms_key_cx(char *path_limits, int stop_on_fail,
 			 tag, ERROR_PROD_TEST_DATA);
 		return (ret | ERROR_PROD_TEST_DATA);
 	}
-
-	if (msCompData.header.force_node > msCompData.header.sense_node)
-		num_keys = msCompData.header.force_node;
-	else
-		num_keys = msCompData.header.sense_node;
-
 
 	if (todo->MutualKeyCx1 == 1) {
 		logError(1, "%s MS KEY CX1 TEST: \n", tag);
@@ -3396,6 +3388,9 @@ static int production_test_ss_hover_raw(char *path_limits, int stop_on_fail,
 	}
 
 ERROR_LIMITS:
+	if (count_fail && ret >= OK)
+		ret = ERROR_PROD_TEST_DATA | ERROR_TEST_CHECK_FAIL;
+
 	if (ssHoverRawFrame.force_data != NULL)
 		kfree(ssHoverRawFrame.force_data);
 	if (ssHoverRawFrame.sense_data != NULL)
@@ -5623,8 +5618,7 @@ int getLimitsFile(char *path, LimitFile *file)
 		file->size = 0;
 	}
 
-	strncpy(file->name, path, MAX_LIMIT_FILE_NAME -1);
-	file->name[MAX_LIMIT_FILE_NAME - 1] = '\0';
+	strscpy(file->name, path, sizeof(file->name));
 
 	if (strncmp(path, "NULL", 4) == 0) {
 #ifdef LIMITS_H_FILE
@@ -5712,7 +5706,7 @@ int freeLimitsFile(LimitFile *file)
 			logError(0, "%s Limit File was already freed!\n", tag);
 
 		file->size = 0;
-		strncpy(file->name, " ", MAX_LIMIT_FILE_NAME);
+		strscpy(file->name, " ", sizeof(file->name));
 		return OK;
 	} else {
 		logError(1, "%s Passed a NULL argument! ERROR %08X \n", tag,

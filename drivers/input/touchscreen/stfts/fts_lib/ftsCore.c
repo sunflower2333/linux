@@ -22,7 +22,7 @@
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/interrupt.h>
-#include <linux/gpio.h>
+#include <linux/gpio/consumer.h>
 #include "ftsCompensation.h"
 #include "ftsCore.h"
 #include "ftsError.h"
@@ -38,7 +38,7 @@ extern struct fts_ts_info *fts_info;
 SysInfo systemInfo;							/*Global System Info variable, accessible in all the driver*/
 /** @}*/
 
-static int reset_gpio = GPIO_NOT_DEFINED;	/*gpio number of the rest pin, the value is  GPIO_NOT_DEFINED if the reset pin is not connected*/
+static struct gpio_desc *reset_gpio;
 static int system_reseted_up;			/*flag checked during resume to understand if there was a system reset and restore the proper state*/
 static int system_reseted_down;		/*flag checked during suspend to understand if there was a system reset and restore the proper state*/
 static int disable_irq_count;			/*count the number of call to disable_irq, start with 1 because at the boot IRQ are already disabled*/
@@ -71,10 +71,10 @@ int initCore(struct fts_ts_info *info)
 * Set the reset_gpio variable with the actual gpio number of the board link to the reset pin
 * @param gpio gpio number link to the reset pin of the IC
 */
-void setResetGpio(int gpio)
+void setResetGpio(struct gpio_desc *gpio)
 {
 	reset_gpio = gpio;
-	logError(0, "%s setResetGpio: reset_gpio = %d\n", tag, reset_gpio);
+	logError(0, "%s %s: reset_gpio = %p\n", tag, __func__, reset_gpio);
 }
 
 /**
@@ -100,15 +100,15 @@ int fts_system_reset(void)
 		resetErrorList();
 		fts_disableInterruptNoSync();
 
-		if (reset_gpio == GPIO_NOT_DEFINED) {
+		if (!reset_gpio) {
 			res =
 			    fts_writeU8UX(FTS_CMD_HW_REG_W, ADDR_SIZE_HW_REG,
 					  ADDR_SYSTEM_RESET, data,
 					  ARRAY_SIZE(data));
 		} else {
-			gpio_set_value(reset_gpio, 0);
+			gpiod_set_raw_value_cansleep(reset_gpio, 0);
 			mdelay(10);
-			gpio_set_value(reset_gpio, 1);
+			gpiod_set_raw_value_cansleep(reset_gpio, 1);
 			res = OK;
 		}
 		if (res < OK) {
@@ -368,9 +368,14 @@ int setScanMode(u8 mode, u8 settings)
 */
 int setFeatures(u8 feat, u8 *settings, int size)
 {
-	u8 cmd[2 + size];
+	u8 *cmd;
 	int i = 0;
 	int ret;
+
+	cmd = kmalloc(size + 2, GFP_KERNEL);
+	if (!cmd)
+		return ERROR_ALLOC;
+
 	logError(0, "%s %s: Setting feature: feat = %02X !\n", tag, __func__,
 		 feat);
 	cmd[0] = FTS_CMD_FEATURE;
@@ -385,10 +390,13 @@ int setFeatures(u8 feat, u8 *settings, int size)
 	if (ret < OK) {
 		logError(1, "%s %s: write failed...ERROR %08X !\n", tag,
 			 __func__, ret);
-		return ret | ERROR_SET_FEATURE_FAIL;
+		ret |= ERROR_SET_FEATURE_FAIL;
+	} else {
+		logError(0, "%s %s: Setting feature OK!\n", tag, __func__);
+		ret = OK;
 	}
-	logError(0, "%s %s: Setting feature OK!\n", tag, __func__);
-	return OK;
+	kfree(cmd);
+	return ret;
 }
 
 /** @}*/
