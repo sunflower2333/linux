@@ -212,8 +212,8 @@ config BACKLIGHT_SY7758
 	depends on I2C
 	select REGMAP_I2C
 	help
-		Say Y to enable the backlight driver for the Silergy SY7758
-		backlight controller found in ayaneo pocket s.
+	  Say Y to enable the backlight driver for the Silergy SY7758
+	  backlight controller found in Ayaneo Pocket S2.
 
 config BACKLIGHT_LM3533
 	tristate "Backlight Driver for LM3533"
