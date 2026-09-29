@@ -1595,6 +1595,8 @@ patternProperties:
     description: Sony Corporation
   "^sophgo,.*":
     description: Sophgo Technology Inc.
+  "^southchip,.*":
+    description: Southchip Semiconductor Technology (Shanghai) Co., Ltd.
   "^sourceparts,.*":
     description: Source Parts Inc.
   "^spacemit,.*":
