@@ -1287,7 +1287,6 @@ static struct sk_buff *cake_ack_filter(struct cake_sched_data *q,
 
 			seglen = ipv6_payload_len(skb, ipv6h_check);
 		} else {
-			WARN_ON(1);  /* shouldn't happen */
 			continue;
 		}
 
@@ -1908,6 +1907,7 @@ static s32 cake_enqueue(struct sk_buff *skb, struct Qdisc *sch,
 					ktime_add_ms(q->last_reconfig_time,
 						     250))) {
 				q->config->rate_bps = (q->avg_peak_bandwidth * 15) >> 4;
+				q->last_reconfig_time = now;
 				cake_reconfigure(sch);
 			}
 		}
